@@ -301,16 +301,21 @@ main {
 }
 
 .convert-btn {
-  background: #373737;
-  border: none;
+  display: flex;
+  height: 65px;
+  padding: 0 31px;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  align-self: stretch;
+  border-radius: 9px;
+  border: 1px solid #373737;
+  background: #2D69FF;
   color: #ffffff;
-  padding: 1rem 3rem;
-  border-radius: 12px;
   font-size: 1.1rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  min-width: 200px;
 }
 
 .convert-btn:hover:not(:disabled) {
@@ -478,7 +483,8 @@ footer {
   
   .convert-btn {
     width: 100%;
-    padding: 1rem 2rem;
+    height: 60px;
+    padding: 0 24px;
   }
   
   .footer-container {
@@ -508,5 +514,7 @@ footer {
   
   .convert-btn {
     font-size: 1rem;
+    height: 55px;
+    padding: 0 20px;
   }
 }
