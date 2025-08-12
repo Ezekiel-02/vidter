@@ -35,16 +35,23 @@
     </section>
 
     <section class="converter-section">
-      <div class="upload-area" id="uploader" aria-label="File uploader">
-        <div class="upload-content">
-          <p class="upload-text">
-            Drag and drop your video files here <span class="separator">/</span>
-            <a href="#" class="browse-link" onclick="document.getElementById('fileInput').click(); return false;">Browse files</a>
-          </p>
-          <p class="terms-text">By proceeding, you agree to our Terms of use.</p>
-        </div>
-        <input id="fileInput" type="file" accept="video/*" multiple />
-      </div>
+             <div class="upload-area" id="uploader" aria-label="File uploader">
+         <div class="upload-content">
+           <div class="upload-icon">
+             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+               <polyline points="7,10 12,15 17,10"/>
+               <line x1="12" y1="15" x2="12" y2="3"/>
+             </svg>
+           </div>
+           <p class="upload-text">
+             Drag and drop your video files here <span class="separator">/</span>
+             <a href="#" class="browse-link" onclick="document.getElementById('fileInput').click(); return false;">Browse files</a>
+           </p>
+           <p class="terms-text">By proceeding, you agree to our Terms of use.</p>
+         </div>
+         <input id="fileInput" type="file" accept="video/*" multiple />
+       </div>
 
       <div class="file-info-section" id="fileInfoSection" style="display: none;">
         <div class="file-details">
