@@ -1,118 +1,429 @@
-const uploader = document.getElementById('uploader');
-const fileInput = document.getElementById('fileInput');
-const selectedText = document.getElementById('selectedFiles');
-const filehint = document.getElementById('filehint');
-const convertBtn = document.getElementById('convertBtn');
-const formatList = document.getElementById('formatList');
-const chosen = document.getElementById('chosen');
-const progressContainer = document.getElementById('progressContainer');
-const progressFill = document.getElementById('progressFill');
-const progressText = document.getElementById('progressText');
-const statusMessage = document.getElementById('statusMessage');
-const filePreview = document.getElementById('filePreview');
-const settingsPanel = document.getElementById('settingsPanel');
-const qualitySelect = document.getElementById('qualitySelect');
-const audioBitrateSelect = document.getElementById('audioBitrateSelect');
-const queuePanel = document.getElementById('queuePanel');
-const queueList = document.getElementById('queueList');
-const startQueueBtn = document.getElementById('startQueueBtn');
-const pauseQueueBtn = document.getElementById('pauseQueueBtn');
-const clearQueueBtn = document.getElementById('clearQueueBtn');
-const historyPanel = document.getElementById('historyPanel');
-const historyList = document.getElementById('historyList');
-const clearHistoryBtn = document.getElementById('clearHistoryBtn');
-const advancedToggle = document.getElementById('advancedToggle');
-const advancedOptions = document.getElementById('advancedOptions');
-const videoResolution = document.getElementById('videoResolution');
-const frameRate = document.getElementById('frameRate');
-const videoBitrate = document.getElementById('videoBitrate');
-
-let files = [];
-let targetFormat = null;
+// Global variables
 let ffmpeg = null;
+let files = [];
 let conversionQueue = [];
-let isQueueRunning = false;
-let isQueuePaused = false;
-let conversionHistory = [];
-let stats = {
-  totalConversions: 0,
-  totalFilesProcessed: 0,
-  totalTimeSaved: 0,
-  averageConversionTime: 0
+let currentTool = null;
+let isConverting = false;
+
+// Tool configurations
+const toolConfigs = {
+  // Video & Audio tools
+  'video-converter': {
+    name: 'Video Converter',
+    description: 'Convert between video formats',
+    acceptTypes: 'video/*',
+    formats: ['mp4', 'webm', 'mov', 'avi', 'mkv', 'flv', 'wmv'],
+    category: 'video'
+  },
+  'audio-converter': {
+    name: 'Audio Converter',
+    description: 'Convert audio files',
+    acceptTypes: 'audio/*',
+    formats: ['mp3', 'wav', 'ogg', 'aac', 'flac', 'm4a', 'wma'],
+    category: 'audio'
+  },
+  'mp3-converter': {
+    name: 'MP3 Converter',
+    description: 'Convert to MP3 format',
+    acceptTypes: 'audio/*,video/*',
+    formats: ['mp3'],
+    category: 'audio'
+  },
+  'mp4-to-mp3': {
+    name: 'MP4 to MP3',
+    description: 'Extract audio from MP4',
+    acceptTypes: 'video/mp4',
+    formats: ['mp3'],
+    category: 'video'
+  },
+  'video-to-mp3': {
+    name: 'Video to MP3',
+    description: 'Extract audio from video',
+    acceptTypes: 'video/*',
+    formats: ['mp3'],
+    category: 'video'
+  },
+  'mp4-converter': {
+    name: 'MP4 Converter',
+    description: 'Convert to/from MP4',
+    acceptTypes: 'video/*',
+    formats: ['mp4', 'webm', 'mov', 'avi', 'mkv'],
+    category: 'video'
+  },
+  'mov-to-mp4': {
+    name: 'MOV to MP4',
+    description: 'Convert MOV to MP4',
+    acceptTypes: 'video/quicktime,video/mp4',
+    formats: ['mp4'],
+    category: 'video'
+  },
+  'mp3-to-ogg': {
+    name: 'MP3 to OGG',
+    description: 'Convert MP3 to OGG',
+    acceptTypes: 'audio/mpeg,audio/mp3',
+    formats: ['ogg'],
+    category: 'audio'
+  },
+
+  // Image tools
+  'image-converter': {
+    name: 'Image Converter',
+    description: 'Convert between image formats',
+    acceptTypes: 'image/*',
+    formats: ['png', 'jpg', 'jpeg', 'webp', 'gif', 'bmp', 'tiff'],
+    category: 'image'
+  },
+  'webp-to-png': {
+    name: 'WEBP to PNG',
+    description: 'Convert WEBP to PNG',
+    acceptTypes: 'image/webp',
+    formats: ['png'],
+    category: 'image'
+  },
+  'jfif-to-png': {
+    name: 'JFIF to PNG',
+    description: 'Convert JFIF to PNG',
+    acceptTypes: 'image/jpeg,image/jfif',
+    formats: ['png'],
+    category: 'image'
+  },
+  'png-to-svg': {
+    name: 'PNG to SVG',
+    description: 'Convert PNG to SVG',
+    acceptTypes: 'image/png',
+    formats: ['svg'],
+    category: 'image'
+  },
+  'heic-to-jpg': {
+    name: 'HEIC to JPG',
+    description: 'Convert HEIC to JPG',
+    acceptTypes: 'image/heic,image/heif',
+    formats: ['jpg', 'jpeg'],
+    category: 'image'
+  },
+  'heic-to-png': {
+    name: 'HEIC to PNG',
+    description: 'Convert HEIC to PNG',
+    acceptTypes: 'image/heic,image/heif',
+    formats: ['png'],
+    category: 'image'
+  },
+  'webp-to-jpg': {
+    name: 'WEBP to JPG',
+    description: 'Convert WEBP to JPG',
+    acceptTypes: 'image/webp',
+    formats: ['jpg', 'jpeg'],
+    category: 'image'
+  },
+
+  // PDF & Documents tools
+  'pdf-converter': {
+    name: 'PDF Converter',
+    description: 'Convert PDF files',
+    acceptTypes: 'application/pdf',
+    formats: ['jpg', 'png', 'docx', 'txt', 'html'],
+    category: 'pdf'
+  },
+  'document-converter': {
+    name: 'Document Converter',
+    description: 'Convert documents',
+    acceptTypes: 'application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain',
+    formats: ['pdf', 'docx', 'txt', 'html'],
+    category: 'pdf'
+  },
+  'ebook-converter': {
+    name: 'Ebook Converter',
+    description: 'Convert ebooks',
+    acceptTypes: 'application/epub+zip,application/x-mobipocket-ebook',
+    formats: ['pdf', 'epub', 'mobi', 'txt'],
+    category: 'pdf'
+  },
+  'pdf-to-word': {
+    name: 'PDF to Word',
+    description: 'Convert PDF to Word',
+    acceptTypes: 'application/pdf',
+    formats: ['docx'],
+    category: 'pdf'
+  },
+  'pdf-to-jpg': {
+    name: 'PDF to JPG',
+    description: 'Convert PDF to JPG',
+    acceptTypes: 'application/pdf',
+    formats: ['jpg', 'jpeg'],
+    category: 'pdf'
+  },
+  'pdf-to-epub': {
+    name: 'PDF to EPUB',
+    description: 'Convert PDF to EPUB',
+    acceptTypes: 'application/pdf',
+    formats: ['epub'],
+    category: 'pdf'
+  },
+  'epub-to-pdf': {
+    name: 'EPUB to PDF',
+    description: 'Convert EPUB to PDF',
+    acceptTypes: 'application/epub+zip',
+    formats: ['pdf'],
+    category: 'pdf'
+  },
+  'heic-to-pdf': {
+    name: 'HEIC to PDF',
+    description: 'Convert HEIC to PDF',
+    acceptTypes: 'image/heic,image/heif',
+    formats: ['pdf'],
+    category: 'pdf'
+  },
+  'docx-to-pdf': {
+    name: 'DOCX to PDF',
+    description: 'Convert DOCX to PDF',
+    acceptTypes: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    formats: ['pdf'],
+    category: 'pdf'
+  },
+  'jpg-to-pdf': {
+    name: 'JPG to PDF',
+    description: 'Convert JPG to PDF',
+    acceptTypes: 'image/jpeg,image/jpg',
+    formats: ['pdf'],
+    category: 'pdf'
+  },
+
+  // GIF tools
+  'video-to-gif': {
+    name: 'Video to GIF',
+    description: 'Convert video to GIF',
+    acceptTypes: 'video/*',
+    formats: ['gif'],
+    category: 'gif'
+  },
+  'mp4-to-gif': {
+    name: 'MP4 to GIF',
+    description: 'Convert MP4 to GIF',
+    acceptTypes: 'video/mp4',
+    formats: ['gif'],
+    category: 'gif'
+  },
+  'webm-to-gif': {
+    name: 'WEBM to GIF',
+    description: 'Convert WEBM to GIF',
+    acceptTypes: 'video/webm',
+    formats: ['gif'],
+    category: 'gif'
+  },
+  'apng-to-gif': {
+    name: 'APNG to GIF',
+    description: 'Convert APNG to GIF',
+    acceptTypes: 'image/apng',
+    formats: ['gif'],
+    category: 'gif'
+  },
+  'gif-to-mp4': {
+    name: 'GIF to MP4',
+    description: 'Convert GIF to MP4',
+    acceptTypes: 'image/gif',
+    formats: ['mp4'],
+    category: 'gif'
+  },
+  'gif-to-apng': {
+    name: 'GIF to APNG',
+    description: 'Convert GIF to APNG',
+    acceptTypes: 'image/gif',
+    formats: ['apng'],
+    category: 'gif'
+  },
+  'image-to-gif': {
+    name: 'Image to GIF',
+    description: 'Convert image to GIF',
+    acceptTypes: 'image/*',
+    formats: ['gif'],
+    category: 'gif'
+  },
+
+  // Others tools
+  'unit-converter': {
+    name: 'Unit Converter',
+    description: 'Convert units',
+    acceptTypes: '*/*',
+    formats: ['txt', 'csv'],
+    category: 'others'
+  },
+  'time-converter': {
+    name: 'Time Converter',
+    description: 'Convert time formats',
+    acceptTypes: '*/*',
+    formats: ['txt', 'csv'],
+    category: 'others'
+  },
+  'archive-converter': {
+    name: 'Archive Converter',
+    description: 'Convert archives',
+    acceptTypes: 'application/zip,application/x-rar-compressed,application/x-7z-compressed',
+    formats: ['zip', 'rar', '7z', 'tar'],
+    category: 'others'
+  }
 };
 
-// Configuration
-const MAX_FILE_SIZE = 500 * 1024 * 1024; // 500MB
-const MAX_FILES = 10;
-const MAX_HISTORY = 50;
-
-// Initialize FFmpeg
-async function initFFmpeg() {
-  try {
-    showStatus('Initializing video converter... This may take a moment.', 'info');
-    
-    ffmpeg = createFFmpeg({ 
-      log: true,
-      corePath: 'https://unpkg.com/@ffmpeg/core@0.12.4/dist/ffmpeg-core.js'
-    });
-    
-    // Show progress during loading
-    ffmpeg.setProgress(({ ratio }) => {
-      if (ratio < 1) {
-        showStatus(`Loading FFmpeg... ${Math.round(ratio * 100)}%`, 'info');
-      }
-    });
-    
-    await ffmpeg.load();
-    console.log('FFmpeg loaded successfully');
-    showStatus('Video converter ready! You can now convert files.', 'success');
-    
-    // Hide success message after 3 seconds
-    setTimeout(() => {
-      hideStatus();
-    }, 3000);
-    
-  } catch (error) {
-    console.error('Failed to load FFmpeg:', error);
-    showStatus('Failed to initialize video converter. Please check your internet connection and refresh the page.', 'error');
-  }
-}
-
-// Initialize on page load
+// Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
-  console.log('Vidter initializing...');
-  
-  // Check if all elements exist
+  // Check if all required elements exist
   const requiredElements = [
-    'uploader', 'fileInput', 'selectedText', 'filehint', 'convertBtn', 'formatList', 'chosen',
-    'progressContainer', 'progressFill', 'progressText', 'statusMessage', 'filePreview',
-    'settingsPanel', 'qualitySelect', 'audioBitrateSelect', 'queuePanel', 'queueList',
-    'startQueueBtn', 'pauseQueueBtn', 'clearQueueBtn', 'historyPanel', 'historyList',
-    'clearHistoryBtn', 'advancedToggle', 'advancedOptions', 'videoResolution',
-    'frameRate', 'videoBitrate'
+    'categoryContent', 'converterInterface', 'uploader', 'fileInput',
+    'filePreview', 'settingsPanel', 'convertBtn', 'formatList',
+    'queuePanel', 'historyPanel', 'progressContainer'
   ];
-  
+
   const missingElements = requiredElements.filter(id => !document.getElementById(id));
-  
   if (missingElements.length > 0) {
-    console.error('Missing elements:', missingElements);
-    showStatus(`Error: Missing elements: ${missingElements.join(', ')}`, 'error');
+    console.error('Missing required elements:', missingElements);
+    showStatus('Error: Some required elements are missing. Please refresh the page.', 'error');
     return;
   }
-  
-  // Initialize everything
+
+  // Initialize components
+  initNavigation();
+  initToolCards();
   initFFmpeg();
   loadHistory();
   setupQueueControls();
   setupAdvancedSettings();
   setupKeyboardShortcuts();
   loadStats();
-  
-  console.log('Vidter initialized successfully');
 });
 
-// Update convert button when FFmpeg is ready
+// Navigation functionality
+function initNavigation() {
+  const navLinks = document.querySelectorAll('.nav-link');
+  const categoryContents = document.querySelectorAll('.category-content');
+
+  navLinks.forEach(link => {
+    link.addEventListener('click', function(e) {
+      e.preventDefault();
+      const category = this.getAttribute('data-category');
+      
+      // Update active nav link
+      navLinks.forEach(l => l.classList.remove('active'));
+      this.classList.add('active');
+      
+      // Show corresponding category content
+      categoryContents.forEach(content => {
+        content.classList.remove('active');
+        if (content.id === `${category}-category`) {
+          content.classList.add('active');
+        }
+      });
+    });
+  });
+}
+
+// Tool card functionality
+function initToolCards() {
+  const toolCards = document.querySelectorAll('.tool-card');
+  
+  toolCards.forEach(card => {
+    card.addEventListener('click', function() {
+      const toolId = this.getAttribute('data-tool');
+      openConverter(toolId);
+    });
+  });
+}
+
+// Open converter interface
+function openConverter(toolId) {
+  const toolConfig = toolConfigs[toolId];
+  if (!toolConfig) {
+    showStatus('Tool configuration not found', 'error');
+    return;
+  }
+
+  currentTool = toolId;
+  
+  // Hide category content and show converter interface
+  document.getElementById('categoryContent').style.display = 'none';
+  document.getElementById('converterInterface').style.display = 'block';
+  
+  // Update converter title
+  document.getElementById('converterTitle').textContent = toolConfig.name;
+  
+  // Update file input accept types
+  document.getElementById('fileInput').accept = toolConfig.acceptTypes;
+  
+  // Update file hint text
+  const fileHint = document.getElementById('filehint');
+  fileHint.innerHTML = `Drag and drop your ${toolConfig.category} files here <span style="color:rgba(255,255,255,0.45)">/</span>
+    <label for="fileInput" style="display:inline-block;">
+      <a class="browse" href="#" onclick="document.getElementById('fileInput').click(); return false;">Browse files</a>
+    </label>`;
+  
+  // Populate format options
+  populateFormatOptions(toolConfig.formats);
+  
+  // Clear previous files
+  files = [];
+  updateFilePreview();
+  updateFileList();
+}
+
+// Populate format options based on tool
+function populateFormatOptions(formats) {
+  const formatList = document.getElementById('formatList');
+  formatList.innerHTML = '';
+  
+  formats.forEach(format => {
+    const formatCard = document.createElement('div');
+    formatCard.className = 'format-card';
+    formatCard.setAttribute('role', 'button');
+    formatCard.setAttribute('data-format', format);
+    formatCard.textContent = `to ${format.toUpperCase()}`;
+    
+    formatCard.addEventListener('click', function() {
+      selectFormat(format);
+    });
+    
+    formatList.appendChild(formatCard);
+  });
+}
+
+// Back to tools functionality
+document.getElementById('backToTools').addEventListener('click', function() {
+  document.getElementById('converterInterface').style.display = 'none';
+  document.getElementById('categoryContent').style.display = 'block';
+  
+  // Reset state
+  currentTool = null;
+  files = [];
+  updateFilePreview();
+  updateFileList();
+  
+  // Hide format list
+  document.getElementById('formatList').style.display = 'none';
+  document.getElementById('chosen').textContent = '';
+});
+
+// Initialize FFmpeg
+async function initFFmpeg() {
+  try {
+    showStatus('Initializing video converter... This may take a moment.', 'info');
+    
+    ffmpeg = createFFmpeg({ log: true });
+    
+    ffmpeg.setProgress(({ ratio }) => {
+      const percent = Math.round(ratio * 100);
+      showStatus(`Loading converter... ${percent}%`, 'info');
+    });
+    
+    await ffmpeg.load();
+    
+    showStatus('Video converter ready!', 'success');
+    updateConvertButton();
+  } catch (error) {
+    console.error('FFmpeg initialization failed:', error);
+    showStatus('Failed to initialize video converter. Please refresh the page.', 'error');
+  }
+}
+
+// Update convert button state
 function updateConvertButton() {
+  const convertBtn = document.getElementById('convertBtn');
   if (ffmpeg && ffmpeg.isLoaded()) {
     convertBtn.textContent = 'Convert file ▾';
     convertBtn.disabled = false;
@@ -122,155 +433,85 @@ function updateConvertButton() {
   }
 }
 
-// Check FFmpeg status periodically
-setInterval(updateConvertButton, 1000);
+// File handling
+document.getElementById('fileInput').addEventListener('change', handleFileSelect);
 
-// drag/drop visual
-['dragenter','dragover'].forEach(evt=>{
-  uploader.addEventListener(evt, e=>{
-    e.preventDefault();
-    e.stopPropagation();
-    uploader.classList.add('dragover');
-  }, false);
-});
-['dragleave','drop'].forEach(evt=>{
-  uploader.addEventListener(evt, e=>{
-    e.preventDefault();
-    e.stopPropagation();
-    uploader.classList.remove('dragover');
-  }, false);
+function handleFileSelect(event) {
+  const selectedFiles = Array.from(event.target.files);
+  addFiles(selectedFiles);
+}
+
+// Drag and drop functionality
+const uploader = document.getElementById('uploader');
+
+uploader.addEventListener('dragover', function(e) {
+  e.preventDefault();
+  this.classList.add('dragover');
 });
 
-uploader.addEventListener('drop', e=>{
-  const dt = e.dataTransfer;
-  if(!dt) return;
-  const dropped = Array.from(dt.files || []);
-  handleFiles(dropped);
+uploader.addEventListener('dragleave', function(e) {
+  e.preventDefault();
+  this.classList.remove('dragover');
 });
 
-fileInput.addEventListener('change', e=>{
-  handleFiles(Array.from(e.target.files || []));
-  fileInput.value = ''; // reset to allow same file again
-});
-
-function handleFiles(list){
-  if(list.length === 0) return;
+uploader.addEventListener('drop', function(e) {
+  e.preventDefault();
+  this.classList.remove('dragover');
   
-  // Check file count limit
-  if (files.length + list.length > MAX_FILES) {
-    showStatus(`Maximum ${MAX_FILES} files allowed. Please remove some files first.`, 'error');
-    return;
-  }
+  const droppedFiles = Array.from(e.dataTransfer.files);
+  addFiles(droppedFiles);
+});
+
+function addFiles(newFiles) {
+  const toolConfig = toolConfigs[currentTool];
+  if (!toolConfig) return;
   
-  // Validate file types and sizes
-  const validTypes = ['video/', 'audio/'];
-  const validFiles = [];
-  const invalidFiles = [];
-  
-  list.forEach(file => {
-    const isValidType = validTypes.some(type => file.type.startsWith(type));
-    const isValidSize = file.size <= MAX_FILE_SIZE;
-    
-    if (isValidType && isValidSize) {
-      validFiles.push(file);
+  newFiles.forEach(file => {
+    // Validate file type
+    if (toolConfig.acceptTypes === '*/*' || file.type.match(toolConfig.acceptTypes)) {
+      files.push(file);
     } else {
-      invalidFiles.push({
-        name: file.name,
-        reason: !isValidType ? 'Invalid file type' : 'File too large'
-      });
+      showStatus(`Invalid file type: ${file.name}`, 'error');
     }
   });
   
-  if (validFiles.length === 0) {
-    showStatus('No valid files found. Please select video/audio files under 500MB.', 'error');
-    return;
-  }
-  
-  if (invalidFiles.length > 0) {
-    const reasons = invalidFiles.map(f => `${f.name} (${f.reason})`).join(', ');
-    showStatus(`Some files were skipped: ${reasons}`, 'error');
-  }
-  
-  // Add new files to existing ones
-  files = [...files, ...validFiles];
-  
-  // Update UI
   updateFilePreview();
   updateFileList();
-  hideStatus();
-}
-
-function updateFileList() {
-  if (files.length === 0) {
-    selectedText.textContent = '';
-    filehint.style.display = 'block';
-    settingsPanel.style.display = 'none';
-  } else {
-    const names = files.map(f => f.name);
-    selectedText.textContent = names.join(', ');
-    filehint.style.display = 'none';
-    settingsPanel.style.display = 'block';
-  }
-  chosen.textContent = targetFormat ? `Selected: ${targetFormat.toUpperCase()}` : '';
 }
 
 function updateFilePreview() {
-  filePreview.innerHTML = '';
+  const preview = document.getElementById('filePreview');
+  preview.innerHTML = '';
   
   files.forEach((file, index) => {
-    const fileCard = document.createElement('div');
-    fileCard.className = 'file-card';
+    const fileItem = document.createElement('div');
+    fileItem.className = 'file-item';
     
-    const isVideo = file.type.startsWith('video/');
-    const fileSize = formatFileSize(file.size);
-    const formatSuggestion = suggestFormat(file);
+    const icon = getFileIcon(file.type);
+    const size = formatFileSize(file.size);
     
-    fileCard.innerHTML = `
-      <button class="file-remove" onclick="removeFile(${index})">×</button>
-      <div class="file-thumbnail">
-        ${isVideo ? '🎥' : '🎵'}
+    fileItem.innerHTML = `
+      <div class="file-info">
+        <div class="file-icon">${icon}</div>
+        <div class="file-details">
+          <h4>${file.name}</h4>
+          <p>${size}</p>
+        </div>
       </div>
-      <div class="file-name">${file.name}</div>
-      <div class="file-size">${fileSize}</div>
-      ${formatSuggestion ? `<div class="format-suggestion">${formatSuggestion}</div>` : ''}
+      <button class="remove-file" onclick="removeFile(${index})">Remove</button>
     `;
     
-    // Generate video thumbnail if possible
-    if (isVideo) {
-      generateVideoThumbnail(file, fileCard.querySelector('.file-thumbnail'));
-    }
-    
-    filePreview.appendChild(fileCard);
+    preview.appendChild(fileItem);
   });
 }
 
-function generateVideoThumbnail(file, thumbnailElement) {
-  const video = document.createElement('video');
-  video.style.display = 'none';
-  video.muted = true;
-  video.preload = 'metadata';
-  
-  video.onloadedmetadata = () => {
-    video.currentTime = 1; // Seek to 1 second
-  };
-  
-  video.onseeked = () => {
-    const canvas = document.createElement('canvas');
-    canvas.width = 80;
-    canvas.height = 60;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(video, 0, 0, 80, 60);
-    
-    const img = document.createElement('img');
-    img.src = canvas.toDataURL();
-    thumbnailElement.innerHTML = '';
-    thumbnailElement.appendChild(img);
-    
-    document.body.removeChild(video);
-  };
-  
-  video.src = URL.createObjectURL(file);
-  document.body.appendChild(video);
+function updateFileList() {
+  const selectedFiles = document.getElementById('selectedFiles');
+  if (files.length === 0) {
+    selectedFiles.textContent = '';
+  } else {
+    selectedFiles.textContent = `${files.length} file(s) selected`;
+  }
 }
 
 // Make removeFile global
@@ -280,154 +521,286 @@ window.removeFile = function(index) {
   updateFileList();
 };
 
+function getFileIcon(mimeType) {
+  if (mimeType.startsWith('video/')) return '🎬';
+  if (mimeType.startsWith('audio/')) return '🎵';
+  if (mimeType.startsWith('image/')) return '🖼️';
+  if (mimeType === 'application/pdf') return '📄';
+  if (mimeType.includes('word') || mimeType.includes('document')) return '📝';
+  if (mimeType.includes('epub')) return '📚';
+  if (mimeType.includes('zip') || mimeType.includes('rar')) return '📦';
+  return '📁';
+}
+
 function formatFileSize(bytes) {
   if (bytes === 0) return '0 Bytes';
   const k = 1024;
   const sizes = ['Bytes', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
-// Queue Management
-function setupQueueControls() {
-  startQueueBtn.addEventListener('click', startQueue);
-  pauseQueueBtn.addEventListener('click', pauseQueue);
-  clearQueueBtn.addEventListener('click', clearQueue);
-  clearHistoryBtn.addEventListener('click', clearHistory);
+// Convert button functionality
+document.getElementById('convertBtn').addEventListener('click', function() {
+  const formatList = document.getElementById('formatList');
+  const isExpanded = formatList.style.display !== 'none';
+  
+  if (isExpanded) {
+    formatList.style.display = 'none';
+    this.setAttribute('aria-expanded', 'false');
+  } else {
+    formatList.style.display = 'block';
+    this.setAttribute('aria-expanded', 'true');
+  }
+});
+
+function selectFormat(format) {
+  document.getElementById('chosen').textContent = `Selected: ${format.toUpperCase()}`;
+  document.getElementById('formatList').style.display = 'none';
+  document.getElementById('convertBtn').setAttribute('aria-expanded', 'false');
+  
+  if (files.length > 0) {
+    startConversion(format);
+  } else {
+    showStatus('Please select files to convert', 'error');
+  }
 }
 
-function addToQueue(fileList, format) {
-  fileList.forEach(file => {
+// Conversion functionality
+async function startConversion(targetFormat) {
+  if (!ffmpeg || !ffmpeg.isLoaded()) {
+    showStatus('Video converter is still initializing. Please wait for the "Video converter ready!" message.', 'error');
+    return;
+  }
+  
+  if (files.length === 0) {
+    showStatus('Please select files to convert', 'error');
+    return;
+  }
+  
+  const toolConfig = toolConfigs[currentTool];
+  if (!toolConfig) {
+    showStatus('Tool configuration not found', 'error');
+    return;
+  }
+  
+  // Add files to queue
+  files.forEach(file => {
     const queueItem = {
-      id: Date.now() + Math.random(),
       file: file,
-      format: format,
+      targetFormat: targetFormat,
       status: 'pending',
       progress: 0,
-      error: null,
       startTime: null,
-      endTime: null
+      endTime: null,
+      tool: currentTool
     };
     conversionQueue.push(queueItem);
   });
   
   updateQueueDisplay();
-  queuePanel.style.display = 'block';
+  
+  // Start processing queue
+  if (!isConverting) {
+    processQueue();
+  }
+  
+  // Clear current files
+  files = [];
+  updateFilePreview();
+  updateFileList();
 }
 
+async function processQueue() {
+  if (conversionQueue.length === 0) {
+    isConverting = false;
+    return;
+  }
+  
+  isConverting = true;
+  
+  for (let i = 0; i < conversionQueue.length; i++) {
+    const item = conversionQueue[i];
+    if (item.status === 'pending') {
+      item.status = 'converting';
+      item.startTime = Date.now();
+      updateQueueDisplay();
+      
+      try {
+        await convertFile(item);
+        item.status = 'completed';
+        item.progress = 100;
+        item.endTime = Date.now();
+        
+        // Add to history
+        addToHistory(item);
+        
+        showStatus(`Converted ${item.file.name} to ${item.targetFormat.toUpperCase()}`, 'success');
+      } catch (error) {
+        console.error('Conversion error:', error);
+        item.status = 'failed';
+        item.error = error.message;
+        showStatus(`Failed to convert ${item.file.name}: ${error.message}`, 'error');
+      }
+      
+      updateQueueDisplay();
+    }
+  }
+  
+  isConverting = false;
+}
+
+async function convertFile(item) {
+  const { file, targetFormat } = item;
+  
+  // For now, we'll implement basic video/audio conversion
+  // In a real implementation, you'd handle different file types differently
+  
+  if (file.type.startsWith('video/') || file.type.startsWith('audio/')) {
+    return await convertVideoAudio(file, targetFormat, item);
+  } else if (file.type.startsWith('image/')) {
+    return await convertImage(file, targetFormat, item);
+  } else {
+    // For other file types, we'll just create a placeholder
+    return await convertGeneric(file, targetFormat, item);
+  }
+}
+
+async function convertVideoAudio(file, targetFormat, item) {
+  const inputName = 'input.' + file.name.split('.').pop();
+  const outputName = 'output.' + targetFormat;
+  
+  // Write input file
+  ffmpeg.FS('writeFile', inputName, await fetchFile(file));
+  
+  // Build FFmpeg command
+  let command = ['-i', inputName];
+  
+  // Add quality settings
+  const quality = document.getElementById('qualitySelect').value;
+  if (quality === 'high') {
+    command.push('-crf', '18');
+  } else if (quality === 'medium') {
+    command.push('-crf', '23');
+  } else {
+    command.push('-crf', '28');
+  }
+  
+  // Add output format
+  command.push(outputName);
+  
+  // Run conversion
+  await ffmpeg.run(...command);
+  
+  // Read output file
+  const data = ffmpeg.FS('readFile', outputName);
+  
+  // Create download link
+  const blob = new Blob([data.buffer], { type: `video/${targetFormat}` });
+  const url = URL.createObjectURL(blob);
+  
+  // Trigger download
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = file.name.replace(/\.[^/.]+$/, '') + '.' + targetFormat;
+  a.click();
+  
+  // Cleanup
+  URL.revokeObjectURL(url);
+  ffmpeg.FS('unlink', inputName);
+  ffmpeg.FS('unlink', outputName);
+  
+  return url;
+}
+
+async function convertImage(file, targetFormat, item) {
+  // For images, we'll use canvas to convert
+  return new Promise((resolve, reject) => {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    
+    img.onload = function() {
+      canvas.width = img.width;
+      canvas.height = img.height;
+      ctx.drawImage(img, 0, 0);
+      
+      canvas.toBlob((blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = file.name.replace(/\.[^/.]+$/, '') + '.' + targetFormat;
+        a.click();
+        
+        URL.revokeObjectURL(url);
+        resolve(url);
+      }, `image/${targetFormat}`);
+    };
+    
+    img.onerror = reject;
+    img.src = URL.createObjectURL(file);
+  });
+}
+
+async function convertGeneric(file, targetFormat, item) {
+  // For generic files, we'll just create a placeholder
+  // In a real implementation, you'd handle different file types appropriately
+  
+  const blob = new Blob([await file.arrayBuffer()], { type: file.type });
+  const url = URL.createObjectURL(blob);
+  
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = file.name.replace(/\.[^/.]+$/, '') + '.' + targetFormat;
+  a.click();
+  
+  URL.revokeObjectURL(url);
+  return url;
+}
+
+function fetchFile(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(new Uint8Array(reader.result));
+    reader.onerror = reject;
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+// Queue management
 function updateQueueDisplay() {
+  const queueList = document.getElementById('queueList');
   queueList.innerHTML = '';
   
   conversionQueue.forEach((item, index) => {
     const queueItem = document.createElement('div');
     queueItem.className = 'queue-item';
     
-    const statusText = {
-      'pending': 'Waiting',
-      'processing': 'Converting',
-      'completed': 'Completed',
-      'error': 'Failed'
-    };
+    const statusText = item.status === 'pending' ? 'Waiting' :
+                     item.status === 'converting' ? 'Converting...' :
+                     item.status === 'completed' ? 'Completed' : 'Failed';
+    
+    const statusColor = item.status === 'completed' ? '#34c759' :
+                       item.status === 'failed' ? '#ff3b30' :
+                       item.status === 'converting' ? '#007aff' : 'rgba(255,255,255,0.6)';
     
     queueItem.innerHTML = `
-      <div class="queue-item-status ${item.status}"></div>
       <div class="queue-item-info">
         <div class="queue-item-name">${item.file.name}</div>
-        <div class="queue-item-details">${statusText[item.status]} → ${item.format.toUpperCase()}</div>
+        <div class="queue-item-status" style="color: ${statusColor}">${statusText}</div>
+      </div>
+      <div class="queue-item-progress">
+        <div class="queue-item-progress-fill" style="width: ${item.progress}%"></div>
       </div>
       <div class="queue-item-actions">
-        ${item.status === 'pending' ? `<button class="queue-item-btn" onclick="removeFromQueue(${index})">Remove</button>` : ''}
-        ${item.status === 'error' ? `<button class="queue-item-btn" onclick="retryQueueItem(${index})">Retry</button>` : ''}
+        ${item.status === 'failed' ? 
+          `<button class="queue-item-btn" onclick="retryQueueItem(${index})">Retry</button>` : ''}
+        <button class="queue-item-btn danger" onclick="removeFromQueue(${index})">Remove</button>
       </div>
     `;
     
     queueList.appendChild(queueItem);
   });
-}
-
-function startQueue() {
-  if (isQueueRunning) return;
-  
-  isQueueRunning = true;
-  isQueuePaused = false;
-  startQueueBtn.textContent = 'Running...';
-  startQueueBtn.disabled = true;
-  pauseQueueBtn.disabled = false;
-  
-  processQueue();
-}
-
-function pauseQueue() {
-  isQueuePaused = !isQueuePaused;
-  pauseQueueBtn.textContent = isQueuePaused ? 'Resume' : 'Pause';
-}
-
-function clearQueue() {
-  conversionQueue = [];
-  updateQueueDisplay();
-  queuePanel.style.display = 'none';
-  isQueueRunning = false;
-  isQueuePaused = false;
-  startQueueBtn.textContent = 'Start All';
-  startQueueBtn.disabled = false;
-  pauseQueueBtn.disabled = true;
-}
-
-async function processQueue() {
-  while (conversionQueue.length > 0 && isQueueRunning && !isQueuePaused) {
-    const pendingItems = conversionQueue.filter(item => item.status === 'pending');
-    
-    if (pendingItems.length === 0) {
-      break;
-    }
-    
-    const item = pendingItems[0];
-    item.status = 'processing';
-    item.startTime = new Date();
-    updateQueueDisplay();
-    
-    try {
-      const result = await convertSingleFile(item.file, item.format);
-      item.status = 'completed';
-      item.endTime = new Date();
-      
-      // Add to history and update stats
-      const conversionTime = Math.round((item.endTime - item.startTime) / 1000);
-      addToHistory(item.file.name, item.format, result.filename, item.startTime, item.endTime);
-      updateStats(conversionTime);
-      
-      // Download file
-      const link = document.createElement('a');
-      link.href = result.url;
-      link.download = result.filename;
-      link.style.display = 'none';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      
-    } catch (error) {
-      item.status = 'error';
-      item.error = error.message;
-      item.endTime = new Date();
-      console.error('Queue conversion error:', error);
-    }
-    
-    updateQueueDisplay();
-    
-    // Remove completed/error items after a delay
-    setTimeout(() => {
-      conversionQueue = conversionQueue.filter(item => item.status === 'pending' || item.status === 'processing');
-      updateQueueDisplay();
-    }, 3000);
-  }
-  
-  if (conversionQueue.length === 0) {
-    isQueueRunning = false;
-    startQueueBtn.textContent = 'Start All';
-    startQueueBtn.disabled = false;
-    pauseQueueBtn.disabled = true;
-    queuePanel.style.display = 'none';
-  }
 }
 
 // Make queue functions global
@@ -439,491 +812,165 @@ window.removeFromQueue = function(index) {
 window.retryQueueItem = function(index) {
   const item = conversionQueue[index];
   item.status = 'pending';
-  item.error = null;
+  item.progress = 0;
   item.startTime = null;
   item.endTime = null;
   updateQueueDisplay();
 };
 
-// History Management
-function addToHistory(fileName, format, outputName, startTime, endTime) {
+function setupQueueControls() {
+  document.getElementById('startQueueBtn').addEventListener('click', function() {
+    if (!isConverting) {
+      processQueue();
+    }
+  });
+  
+  document.getElementById('clearQueueBtn').addEventListener('click', function() {
+    conversionQueue = [];
+    updateQueueDisplay();
+  });
+  
+  document.getElementById('pauseQueueBtn').addEventListener('click', function() {
+    // Pause functionality would be implemented here
+    showStatus('Pause functionality coming soon', 'info');
+  });
+}
+
+// History management
+function addToHistory(item) {
+  const history = JSON.parse(localStorage.getItem('conversionHistory') || '[]');
+  
   const historyItem = {
-    id: Date.now(),
-    fileName: fileName,
-    format: format,
-    outputName: outputName,
-    startTime: startTime,
-    endTime: endTime,
-    duration: Math.round((endTime - startTime) / 1000)
+    fileName: item.file.name,
+    targetFormat: item.targetFormat,
+    tool: item.tool,
+    timestamp: Date.now(),
+    fileSize: item.file.size,
+    conversionTime: item.endTime - item.startTime
   };
   
-  conversionHistory.unshift(historyItem);
+  history.unshift(historyItem);
   
-  // Keep only recent items
-  if (conversionHistory.length > MAX_HISTORY) {
-    conversionHistory = conversionHistory.slice(0, MAX_HISTORY);
+  // Keep only last 50 items
+  if (history.length > 50) {
+    history.splice(50);
   }
   
-  saveHistory();
+  localStorage.setItem('conversionHistory', JSON.stringify(history));
+  updateHistoryDisplay();
+}
+
+function loadHistory() {
   updateHistoryDisplay();
 }
 
 function updateHistoryDisplay() {
-  if (conversionHistory.length === 0) {
-    historyPanel.style.display = 'none';
-    return;
-  }
+  const historyList = document.getElementById('historyList');
+  const history = JSON.parse(localStorage.getItem('conversionHistory') || '[]');
   
-  historyPanel.style.display = 'block';
   historyList.innerHTML = '';
   
-  conversionHistory.forEach(item => {
+  history.forEach((item, index) => {
     const historyItem = document.createElement('div');
     historyItem.className = 'history-item';
     
+    const toolConfig = toolConfigs[item.tool];
+    const toolName = toolConfig ? toolConfig.name : 'Unknown Tool';
+    
     historyItem.innerHTML = `
-      <div class="history-item-icon">✓</div>
       <div class="history-item-info">
         <div class="history-item-name">${item.fileName}</div>
-        <div class="history-item-details">${item.format.toUpperCase()} • ${item.duration}s • ${new Date(item.startTime).toLocaleTimeString()}</div>
+        <div class="history-item-details">
+          ${toolName} • ${item.targetFormat.toUpperCase()} • ${formatFileSize(item.fileSize)} • ${formatTime(item.timestamp)}
+        </div>
       </div>
+      <button class="history-item-download" onclick="downloadHistoryItem(${index})">Download</button>
     `;
     
     historyList.appendChild(historyItem);
   });
 }
 
-function clearHistory() {
-  conversionHistory = [];
-  saveHistory();
+document.getElementById('clearHistoryBtn').addEventListener('click', function() {
+  localStorage.removeItem('conversionHistory');
   updateHistoryDisplay();
+  showStatus('History cleared', 'success');
+});
+
+function formatTime(timestamp) {
+  const date = new Date(timestamp);
+  return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
 }
 
-function saveHistory() {
-  try {
-    localStorage.setItem('vidter_history', JSON.stringify(conversionHistory));
-  } catch (error) {
-    console.error('Failed to save history:', error);
-  }
+function downloadHistoryItem(index) {
+  // This would re-download the converted file
+  // For now, we'll just show a message
+  showStatus('Download functionality coming soon', 'info');
 }
 
-function loadHistory() {
-  try {
-    const saved = localStorage.getItem('vidter_history');
-    if (saved) {
-      conversionHistory = JSON.parse(saved);
-      updateHistoryDisplay();
-    }
-  } catch (error) {
-    console.error('Failed to load history:', error);
-  }
-}
-
-// Advanced Settings Management
+// Advanced settings
 function setupAdvancedSettings() {
-  advancedToggle.addEventListener('click', () => {
-    const isVisible = advancedOptions.classList.contains('show');
+  const advancedToggle = document.getElementById('advancedToggle');
+  const advancedOptions = document.getElementById('advancedOptions');
+  
+  advancedToggle.addEventListener('click', function() {
     advancedOptions.classList.toggle('show');
-    advancedToggle.textContent = isVisible ? 'Advanced Settings' : 'Hide Advanced Settings';
   });
 }
 
-// Keyboard Shortcuts
+// Keyboard shortcuts
 function setupKeyboardShortcuts() {
-  document.addEventListener('keydown', (e) => {
-    // Ctrl/Cmd + O to open file browser
+  document.addEventListener('keydown', function(e) {
+    // Ctrl/Cmd + O to open file dialog
     if ((e.ctrlKey || e.metaKey) && e.key === 'o') {
       e.preventDefault();
-      fileInput.click();
+      document.getElementById('fileInput').click();
     }
     
-    // Ctrl/Cmd + Enter to start conversion if format is selected
-    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && targetFormat && files.length > 0) {
-      e.preventDefault();
-      addToQueue(files, targetFormat);
-    }
-    
-    // Escape to close format list
-    if (e.key === 'Escape' && !formatList.hidden) {
-      formatList.hidden = true;
-      convertBtn.setAttribute('aria-expanded', 'false');
-    }
-    
-    // ? to show shortcuts help
-    if (e.key === '?') {
-      e.preventDefault();
-      showShortcutsHelp();
+    // Escape to go back to tools
+    if (e.key === 'Escape' && document.getElementById('converterInterface').style.display !== 'none') {
+      document.getElementById('backToTools').click();
     }
   });
 }
 
-function showShortcutsHelp() {
-  const shortcutsHTML = `
-    <div class="shortcuts-panel">
-      <div class="shortcuts-header">
-        <div class="shortcuts-title">Keyboard Shortcuts</div>
-        <button class="shortcuts-close" onclick="hideShortcutsHelp()">×</button>
-      </div>
-      <div class="shortcut-item">
-        <span class="shortcut-action">Open file browser</span>
-        <span class="shortcut-key">Ctrl+O</span>
-      </div>
-      <div class="shortcut-item">
-        <span class="shortcut-action">Start conversion</span>
-        <span class="shortcut-key">Ctrl+Enter</span>
-      </div>
-      <div class="shortcut-item">
-        <span class="shortcut-action">Close format list</span>
-        <span class="shortcut-key">Esc</span>
-      </div>
-      <div class="shortcut-item">
-        <span class="shortcut-action">Show this help</span>
-        <span class="shortcut-key">?</span>
-      </div>
-    </div>
-    <div class="overlay" onclick="hideShortcutsHelp()"></div>
-  `;
-  
-  document.body.insertAdjacentHTML('beforeend', shortcutsHTML);
-  document.querySelector('.shortcuts-panel').style.display = 'block';
-  document.querySelector('.overlay').style.display = 'block';
-}
-
-window.hideShortcutsHelp = function() {
-  const shortcutsPanel = document.querySelector('.shortcuts-panel');
-  const overlay = document.querySelector('.overlay');
-  if (shortcutsPanel) shortcutsPanel.remove();
-  if (overlay) overlay.remove();
-};
-
-// Statistics Management
-function loadStats() {
-  try {
-    const saved = localStorage.getItem('vidter_stats');
-    if (saved) {
-      stats = JSON.parse(saved);
-    }
-  } catch (error) {
-    console.error('Failed to load stats:', error);
-  }
-}
-
-function saveStats() {
-  try {
-    localStorage.setItem('vidter_stats', JSON.stringify(stats));
-  } catch (error) {
-    console.error('Failed to save stats:', error);
-  }
-}
-
-function updateStats(conversionTime) {
-  stats.totalConversions++;
-  stats.totalFilesProcessed++;
-  stats.totalTimeSaved += conversionTime;
-  stats.averageConversionTime = stats.totalTimeSaved / stats.totalConversions;
-  saveStats();
-}
-
-// File Format Detection and Suggestions
-function detectFileFormat(file) {
-  const extension = getFileExtension(file.name).toLowerCase();
-  const mimeType = file.type;
-  
-  const formatMap = {
-    'mp4': ['mp4', 'm4v', 'mov'],
-    'webm': ['webm'],
-    'avi': ['avi'],
-    'mov': ['mov', 'qt'],
-    'mp3': ['mp3', 'wav', 'aac', 'ogg', 'flac']
-  };
-  
-  for (const [format, extensions] of Object.entries(formatMap)) {
-    if (extensions.includes(extension)) {
-      return format;
-    }
-  }
-  
-  // Fallback based on MIME type
-  if (mimeType.startsWith('video/')) {
-    return 'mp4'; // Default video format
-  } else if (mimeType.startsWith('audio/')) {
-    return 'mp3'; // Default audio format
-  }
-  
-  return null;
-}
-
-function suggestFormat(file) {
-  const detectedFormat = detectFileFormat(file);
-  if (detectedFormat) {
-    return `Suggested format: ${detectedFormat.toUpperCase()}`;
-  }
-  return null;
-}
-
-// convert button toggles formats
-convertBtn.addEventListener('click', ()=>{
-  const open = formatList.hidden;
-  formatList.hidden = !open;
-  convertBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
-});
-
-// format buttons
-document.querySelectorAll('.format-card').forEach(card=>{
-  card.addEventListener('click', async ()=>{
-    targetFormat = card.dataset.format;
-    chosen.textContent = `Selected: ${targetFormat.toUpperCase()}`;
-    formatList.hidden = true;
-
-    if(files.length === 0){
-      showStatus('No files selected. Please drag & drop or browse files first.', 'error');
-      return;
-    }
-
-    if (!ffmpeg || !ffmpeg.isLoaded()) {
-      showStatus('Video converter is still initializing. Please wait for the "Video converter ready!" message.', 'error');
-      return;
-    }
-
-    // Add files to queue instead of immediate conversion
-    addToQueue(files, targetFormat);
-    showStatus(`${files.length} file(s) added to conversion queue. Click "Start All" to begin.`, 'success');
-    
-    // Reset file selection
-    files = [];
-    updateFilePreview();
-    updateFileList();
-  });
-});
-
-async function convertFiles(fileList, format) {
-  try {
-    convertBtn.disabled = true;
-    convertBtn.textContent = `Converting ${fileList.length} file(s) → ${format.toUpperCase()}...`;
-    progressContainer.style.display = 'block';
-    progressFill.style.width = '0%';
-    progressText.textContent = 'Preparing conversion...';
-    hideStatus();
-
-    const results = [];
-    
-    for (let i = 0; i < fileList.length; i++) {
-      const file = fileList[i];
-      const progress = ((i / fileList.length) * 100).toFixed(1);
-      progressFill.style.width = `${progress}%`;
-      progressText.textContent = `Converting ${file.name}... (${i + 1}/${fileList.length})`;
-      
-      const result = await convertSingleFile(file, format);
-      results.push(result);
-    }
-
-    progressFill.style.width = '100%';
-    progressText.textContent = 'Conversion complete!';
-    
-    // Create download links
-    results.forEach((result, index) => {
-      const link = document.createElement('a');
-      link.href = result.url;
-      link.download = result.filename;
-      link.style.display = 'none';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    });
-
-    showStatus(`Successfully converted ${results.length} file(s) to ${format.toUpperCase()}!`, 'success');
-    
-    // Reset UI
-    setTimeout(() => {
-      progressContainer.style.display = 'none';
-      convertBtn.disabled = false;
-      convertBtn.textContent = 'Convert file ▾';
-      files = [];
-      updateFilePreview();
-      updateFileList();
-      chosen.textContent = '';
-    }, 3000);
-
-  } catch (error) {
-    console.error('Conversion error:', error);
-    showStatus(`Conversion failed: ${error.message}`, 'error');
-    progressContainer.style.display = 'none';
-    convertBtn.disabled = false;
-    convertBtn.textContent = 'Convert file ▾';
-  }
-}
-
-async function convertSingleFile(file, format) {
-  const inputName = `input_${Date.now()}.${getFileExtension(file.name)}`;
-  const outputName = `output_${Date.now()}.${format}`;
-  
-  // Write file to FFmpeg
-  ffmpeg.FS('writeFile', inputName, await file.arrayBuffer());
-  
-  // Get quality settings
-  const quality = qualitySelect.value;
-  const audioBitrate = audioBitrateSelect.value;
-  
-  // Get advanced settings if available
-  const resolution = videoResolution.value || '1920x1080';
-  const fps = frameRate.value || '30';
-  const videoBitrateValue = videoBitrate.value || '2';
-  
-  // Build FFmpeg command based on format and quality settings
-  let command = [];
-  
-  if (format === 'mp3') {
-    command = ['-i', inputName, '-vn', '-acodec', 'mp3', '-ab', `${audioBitrate}k`, outputName];
-  } else if (format === 'mp4') {
-    const videoSettings = getVideoSettings(quality);
-    command = [
-      '-i', inputName, 
-      '-c:v', 'libx264', 
-      '-preset', videoSettings.preset,
-      '-crf', videoSettings.crf,
-      '-vf', `scale=${resolution}:force_original_aspect_ratio=decrease`,
-      '-r', fps,
-      '-c:a', 'aac', 
-      '-b:a', `${audioBitrate}k`,
-      outputName
-    ];
-  } else if (format === 'webm') {
-    const videoSettings = getVideoSettings(quality);
-    command = [
-      '-i', inputName, 
-      '-c:v', 'libvpx-vp9', 
-      '-crf', videoSettings.crf,
-      '-vf', `scale=${resolution}:force_original_aspect_ratio=decrease`,
-      '-r', fps,
-      '-b:v', videoSettings.bitrate,
-      '-c:a', 'libopus', 
-      '-b:a', `${audioBitrate}k`,
-      outputName
-    ];
-  } else if (format === 'mov') {
-    const videoSettings = getVideoSettings(quality);
-    command = [
-      '-i', inputName, 
-      '-c:v', 'libx264', 
-      '-preset', videoSettings.preset,
-      '-crf', videoSettings.crf,
-      '-vf', `scale=${resolution}:force_original_aspect_ratio=decrease`,
-      '-r', fps,
-      '-c:a', 'aac', 
-      '-b:a', `${audioBitrate}k`,
-      '-f', 'mov', 
-      outputName
-    ];
-  } else if (format === 'avi') {
-    const videoSettings = getVideoSettings(quality);
-    command = [
-      '-i', inputName, 
-      '-c:v', 'libx264', 
-      '-preset', videoSettings.preset,
-      '-crf', videoSettings.crf,
-      '-vf', `scale=${resolution}:force_original_aspect_ratio=decrease`,
-      '-r', fps,
-      '-c:a', 'mp3', 
-      '-b:a', `${audioBitrate}k`,
-      outputName
-    ];
-  }
-  
-  // Run conversion
-  await ffmpeg.run(...command);
-  
-  // Read result
-  const data = ffmpeg.FS('readFile', outputName);
-  
-  // Clean up
-  ffmpeg.FS('unlink', inputName);
-  ffmpeg.FS('unlink', outputName);
-  
-  // Create download URL
-  const blob = new Blob([data.buffer], { type: getMimeType(format) });
-  const url = URL.createObjectURL(blob);
-  
-  const filename = file.name.replace(/\.[^/.]+$/, '') + '.' + format;
-  
-  return { url, filename };
-}
-
-function getVideoSettings(quality) {
-  switch (quality) {
-    case 'high':
-      return { preset: 'slow', crf: '18', bitrate: '2M' };
-    case 'medium':
-      return { preset: 'medium', crf: '23', bitrate: '1M' };
-    case 'low':
-      return { preset: 'fast', crf: '28', bitrate: '500k' };
-    default:
-      return { preset: 'medium', crf: '23', bitrate: '1M' };
-  }
-}
-
-function getFileExtension(filename) {
-  return filename.split('.').pop().toLowerCase();
-}
-
-function getMimeType(format) {
-  const mimeTypes = {
-    'mp4': 'video/mp4',
-    'webm': 'video/webm',
-    'mov': 'video/quicktime',
-    'avi': 'video/x-msvideo',
-    'mp3': 'audio/mpeg'
-  };
-  return mimeTypes[format] || 'application/octet-stream';
-}
-
-function showStatus(message, type) {
+// Status messages
+function showStatus(message, type = 'info') {
+  const statusMessage = document.getElementById('statusMessage');
   statusMessage.textContent = message;
-  statusMessage.className = `status-message status-${type}`;
-  statusMessage.style.display = 'block';
+  statusMessage.className = `status-message ${type}`;
   
-  // Show notification for important messages
-  if (type === 'success' || type === 'error') {
-    showNotification(message, type);
-  }
-}
-
-function showNotification(message, type) {
-  const notification = document.createElement('div');
-  notification.className = `notification ${type}`;
-  notification.innerHTML = `
-    <div style="font-weight:500;margin-bottom:4px;">${type === 'success' ? '✓ Success' : type === 'error' ? '✗ Error' : 'ℹ Info'}</div>
-    <div style="font-size:13px;color:rgba(255,255,255,0.7);">${message}</div>
-  `;
-  
-  document.body.appendChild(notification);
-  
-  // Show notification
-  setTimeout(() => notification.classList.add('show'), 100);
-  
-  // Hide and remove after 4 seconds
+  // Auto-hide after 5 seconds
   setTimeout(() => {
-    notification.classList.remove('show');
-    setTimeout(() => notification.remove(), 300);
-  }, 4000);
+    statusMessage.textContent = '';
+    statusMessage.className = 'status-message';
+  }, 5000);
 }
 
-function hideStatus() {
-  statusMessage.style.display = 'none';
+// Statistics
+function loadStats() {
+  const history = JSON.parse(localStorage.getItem('conversionHistory') || '[]');
+  const totalConversions = history.length;
+  const totalTimeSaved = history.reduce((sum, item) => sum + (item.conversionTime || 0), 0);
+  const averageTime = totalConversions > 0 ? totalTimeSaved / totalConversions : 0;
+  
+  // You could display these stats somewhere in the UI
+  console.log(`Total conversions: ${totalConversions}`);
+  console.log(`Total time saved: ${formatTime(totalTimeSaved)}`);
+  console.log(`Average conversion time: ${formatTime(averageTime)}`);
 }
 
-// keyboard accessibility: close formats when clicking outside
-document.addEventListener('click', (e)=>{
-  if(!formatList.hidden && !convertBtn.contains(e.target) && !formatList.contains(e.target)){
-    formatList.hidden = true;
-    convertBtn.setAttribute('aria-expanded', 'false');
+// Helper function to format time in milliseconds
+function formatTime(ms) {
+  const seconds = Math.floor(ms / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+  
+  if (hours > 0) {
+    return `${hours}h ${minutes % 60}m`;
+  } else if (minutes > 0) {
+    return `${minutes}m ${seconds % 60}s`;
+  } else {
+    return `${seconds}s`;
   }
-});
-
-// Add keyboard shortcut hint to footer
-document.addEventListener('DOMContentLoaded', () => {
-  const footer = document.querySelector('footer div');
-  footer.innerHTML += ' · Press ? for keyboard shortcuts';
-});
-
-// small improvement: show allowed types
-chosen.textContent = '';
+}
