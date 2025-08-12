@@ -79,12 +79,37 @@ async function initFFmpeg() {
 }
 
 // Initialize on page load
-initFFmpeg();
-loadHistory();
-setupQueueControls();
-setupAdvancedSettings();
-setupKeyboardShortcuts();
-loadStats();
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('Vidter initializing...');
+  
+  // Check if all elements exist
+  const requiredElements = [
+    'uploader', 'fileInput', 'selectedText', 'filehint', 'convertBtn', 'formatList', 'chosen',
+    'progressContainer', 'progressFill', 'progressText', 'statusMessage', 'filePreview',
+    'settingsPanel', 'qualitySelect', 'audioBitrateSelect', 'queuePanel', 'queueList',
+    'startQueueBtn', 'pauseQueueBtn', 'clearQueueBtn', 'historyPanel', 'historyList',
+    'clearHistoryBtn', 'advancedToggle', 'advancedOptions', 'videoResolution',
+    'frameRate', 'videoBitrate'
+  ];
+  
+  const missingElements = requiredElements.filter(id => !document.getElementById(id));
+  
+  if (missingElements.length > 0) {
+    console.error('Missing elements:', missingElements);
+    showStatus(`Error: Missing elements: ${missingElements.join(', ')}`, 'error');
+    return;
+  }
+  
+  // Initialize everything
+  initFFmpeg();
+  loadHistory();
+  setupQueueControls();
+  setupAdvancedSettings();
+  setupKeyboardShortcuts();
+  loadStats();
+  
+  console.log('Vidter initialized successfully');
+});
 
 // Update convert button when FFmpeg is ready
 function updateConvertButton() {
@@ -248,11 +273,12 @@ function generateVideoThumbnail(file, thumbnailElement) {
   document.body.appendChild(video);
 }
 
-function removeFile(index) {
+// Make removeFile global
+window.removeFile = function(index) {
   files.splice(index, 1);
   updateFilePreview();
   updateFileList();
-}
+};
 
 function formatFileSize(bytes) {
   if (bytes === 0) return '0 Bytes';
@@ -404,19 +430,20 @@ async function processQueue() {
   }
 }
 
-function removeFromQueue(index) {
+// Make queue functions global
+window.removeFromQueue = function(index) {
   conversionQueue.splice(index, 1);
   updateQueueDisplay();
-}
+};
 
-function retryQueueItem(index) {
+window.retryQueueItem = function(index) {
   const item = conversionQueue[index];
   item.status = 'pending';
   item.error = null;
   item.startTime = null;
   item.endTime = null;
   updateQueueDisplay();
-}
+};
 
 // History Management
 function addToHistory(fileName, format, outputName, startTime, endTime) {
@@ -562,12 +589,12 @@ function showShortcutsHelp() {
   document.querySelector('.overlay').style.display = 'block';
 }
 
-function hideShortcutsHelp() {
+window.hideShortcutsHelp = function() {
   const shortcutsPanel = document.querySelector('.shortcuts-panel');
   const overlay = document.querySelector('.overlay');
   if (shortcutsPanel) shortcutsPanel.remove();
   if (overlay) overlay.remove();
-}
+};
 
 // Statistics Management
 function loadStats() {

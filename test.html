@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Vidter Test</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <div class="logo">Vidter</div>
+    <nav aria-label="Main navigation">
+      <a href="#">About ▾</a>
+      <a href="#">Playground</a>
+      <a href="#">Documentation</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero" aria-labelledby="hero-title">
+      <h1 id="hero-title" class="title">Convert your videos</h1>
+      <p class="subtitle">Testing functionality...</p>
+    </section>
+
+    <section class="uploader" id="uploader" aria-label="File uploader">
+      <div class="inner">
+        <p id="filehint">Drag and drop your video files here <span style="color:rgba(255,255,255,0.45)">/</span>
+          <label for="fileInput" style="display:inline-block;">
+            <a class="browse" href="#" onclick="document.getElementById('fileInput').click(); return false;">Browse files</a>
+          </label>
+        </p>
+        <p id="selectedFiles" style="margin-top:12px; font-size:13px; color:rgba(255,255,255,0.45)"></p>
+      </div>
+
+      <input id="fileInput" type="file" accept="video/*,audio/*" multiple />
+    </section>
+
+    <div id="filePreview" class="file-preview"></div>
+
+    <div id="settingsPanel" class="settings-panel">
+      <div class="settings-row">
+        <div class="settings-label">Video Quality</div>
+        <div class="settings-control">
+          <select id="qualitySelect" class="quality-select">
+            <option value="high">High Quality</option>
+            <option value="medium" selected>Medium Quality</option>
+            <option value="low">Low Quality</option>
+          </select>
+        </div>
+      </div>
+      <div class="settings-row">
+        <div class="settings-label">Audio Bitrate</div>
+        <div class="settings-control">
+          <select id="audioBitrateSelect" class="quality-select">
+            <option value="320">320 kbps</option>
+            <option value="256" selected>256 kbps</option>
+            <option value="192">192 kbps</option>
+            <option value="128">128 kbps</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="advanced-settings">
+        <button id="advancedToggle" class="advanced-toggle">Advanced Settings</button>
+        <div id="advancedOptions" class="advanced-options">
+          <div class="advanced-row">
+            <div class="advanced-label">Video Resolution</div>
+            <input id="videoResolution" class="advanced-input" type="text" placeholder="1920x1080" value="1920x1080">
+          </div>
+          <div class="advanced-row">
+            <div class="advanced-label">Frame Rate</div>
+            <input id="frameRate" class="advanced-input" type="text" placeholder="30" value="30">
+          </div>
+          <div class="advanced-row">
+            <div class="advanced-label">Video Bitrate (Mbps)</div>
+            <input id="videoBitrate" class="advanced-input" type="text" placeholder="2" value="2">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="convert-wrap" aria-hidden="false">
+      <button id="convertBtn" class="convert-btn" aria-expanded="false" aria-controls="formatList">
+        Convert file ▾
+      </button>
+
+      <div id="formatList" class="format-list" style="display: none;">
+        <div class="format-card" role="button" data-format="mp4">to MP4</div>
+        <div class="format-card" role="button" data-format="webm">to WEBM</div>
+        <div class="format-card" role="button" data-format="mov">to MOV</div>
+        <div class="format-card" role="button" data-format="avi">to AVI</div>
+        <div class="format-card" role="button" data-format="mp3">to MP3</div>
+      </div>
+
+      <div id="chosen" class="selected-format" aria-live="polite"></div>
+    </div>
+
+    <div id="queuePanel" class="queue-panel">
+      <div class="queue-header">
+        <div class="queue-title">Conversion Queue</div>
+        <div class="queue-controls">
+          <button id="pauseQueueBtn" class="queue-btn">Pause</button>
+          <button id="clearQueueBtn" class="queue-btn">Clear</button>
+          <button id="startQueueBtn" class="queue-btn primary">Start All</button>
+        </div>
+      </div>
+      <div id="queueList"></div>
+    </div>
+
+    <div id="historyPanel" class="history-panel">
+      <div class="history-header">
+        <div class="history-title">Recent Conversions</div>
+        <button id="clearHistoryBtn" class="history-clear">Clear History</button>
+      </div>
+      <div id="historyList"></div>
+    </div>
+
+    <div id="progressContainer" class="progress-container">
+      <div class="progress-bar">
+        <div id="progressFill" class="progress-fill"></div>
+      </div>
+      <div id="progressText" class="progress-text">Initializing...</div>
+    </div>
+
+    <div id="statusMessage" class="status-message"></div>
+  </main>
+
+  <footer>
+    <div style="max-width:1100px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;gap:16px;">
+      <div>Free conversion — no sign-up required · Files processed locally · Queue system & history</div>
+      <div>© Vidter</div>
+    </div>
+  </footer>
+
+  <script>
+    // Test script to check if all elements are found
+    console.log('Testing element detection...');
+    
+    const elements = [
+      'uploader', 'fileInput', 'selectedFiles', 'filehint', 'convertBtn', 
+      'formatList', 'chosen', 'progressContainer', 'progressFill', 'progressText',
+      'statusMessage', 'filePreview', 'settingsPanel', 'qualitySelect', 
+      'audioBitrateSelect', 'queuePanel', 'queueList', 'startQueueBtn', 
+      'pauseQueueBtn', 'clearQueueBtn', 'historyPanel', 'historyList', 
+      'clearHistoryBtn', 'advancedToggle', 'advancedOptions', 'videoResolution',
+      'frameRate', 'videoBitrate'
+    ];
+    
+    let missingElements = [];
+    
+    elements.forEach(id => {
+      const element = document.getElementById(id);
+      if (!element) {
+        missingElements.push(id);
+        console.error(`❌ Missing element: ${id}`);
+      } else {
+        console.log(`✅ Found element: ${id}`);
+      }
+    });
+    
+    if (missingElements.length === 0) {
+      console.log('🎉 All elements found!');
+    } else {
+      console.log(`❌ Missing ${missingElements.length} elements:`, missingElements);
+    }
+  </script>
+</body>
+</html>
