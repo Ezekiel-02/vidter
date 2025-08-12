@@ -139,7 +139,7 @@ function initOutputSelector() {
       const format = this.getAttribute('data-format');
       selectedFormat = format;
       
-      outputBtn.textContent = `Output - ${format.toUpperCase()} ▾`;
+      outputBtn.innerHTML = `Output - ${format.toUpperCase()} <svg class="arrow-down" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>`;
       outputDropdown.style.display = 'none';
       outputBtn.setAttribute('aria-expanded', 'false');
       
