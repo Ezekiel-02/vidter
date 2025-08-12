@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Vidter — All-in-One Media Converter</title>
+  <title>Vidter — Convert your videos</title>
 
   <!-- Inter font -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
@@ -16,316 +16,63 @@
 </head>
 <body>
   <header>
-    <div class="logo">Vidter</div>
-    <nav aria-label="Main navigation">
-      <a href="#" class="nav-link active" data-category="video">Video & Audio</a>
-      <a href="#" class="nav-link" data-category="image">Image</a>
-      <a href="#" class="nav-link" data-category="pdf">PDF & Documents</a>
-      <a href="#" class="nav-link" data-category="gif">GIF</a>
-      <a href="#" class="nav-link" data-category="others">Others</a>
-    </nav>
+    <div class="header-container">
+      <div class="logo">
+        <div class="logo-icon">V</div>
+        <span class="logo-text">Vidter</span>
+      </div>
+      <nav aria-label="Main navigation">
+        <a href="#" class="nav-link">Convert ▾</a>
+        <a href="#" class="nav-link">Compress ▾</a>
+        <a href="#" class="nav-link">Pricing</a>
+      </nav>
+    </div>
   </header>
 
   <main>
     <section class="hero" aria-labelledby="hero-title">
-      <h1 id="hero-title" class="title">All-in-One Media Converter</h1>
-      <p class="subtitle">Convert videos, images, documents, and more with our comprehensive suite of conversion tools. Fast, secure, and completely free!</p>
+      <h1 id="hero-title" class="title">Convert your videos</h1>
+      <p class="subtitle">Easily convert your video files to any format you need, whether it's MP4, AVI, or MOV. Enjoy seamless compatibility across all devices and platforms!</p>
     </section>
 
-    <!-- Category Content -->
-    <div id="categoryContent">
-      <!-- Video & Audio Category -->
-      <div id="video-category" class="category-content active">
-        <div class="tools-grid">
-          <div class="tool-card" data-tool="video-converter">
-            <div class="tool-icon">🎬</div>
-            <h3>Video Converter</h3>
-            <p>Convert between video formats</p>
-          </div>
-          <div class="tool-card" data-tool="audio-converter">
-            <div class="tool-icon">🎵</div>
-            <h3>Audio Converter</h3>
-            <p>Convert audio files</p>
-          </div>
-          <div class="tool-card" data-tool="mp3-converter">
-            <div class="tool-icon">🎧</div>
-            <h3>MP3 Converter</h3>
-            <p>Convert to MP3 format</p>
-          </div>
-          <div class="tool-card" data-tool="mp4-to-mp3">
-            <div class="tool-icon">📹➡️🎵</div>
-            <h3>MP4 to MP3</h3>
-            <p>Extract audio from MP4</p>
-          </div>
-          <div class="tool-card" data-tool="video-to-mp3">
-            <div class="tool-icon">🎬➡️🎵</div>
-            <h3>Video to MP3</h3>
-            <p>Extract audio from video</p>
-          </div>
-          <div class="tool-card" data-tool="mp4-converter">
-            <div class="tool-icon">📹</div>
-            <h3>MP4 Converter</h3>
-            <p>Convert to/from MP4</p>
-          </div>
-          <div class="tool-card" data-tool="mov-to-mp4">
-            <div class="tool-icon">🍎➡️📹</div>
-            <h3>MOV to MP4</h3>
-            <p>Convert MOV to MP4</p>
-          </div>
-          <div class="tool-card" data-tool="mp3-to-ogg">
-            <div class="tool-icon">🎵➡️🔊</div>
-            <h3>MP3 to OGG</h3>
-            <p>Convert MP3 to OGG</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Image Category -->
-      <div id="image-category" class="category-content">
-        <div class="tools-grid">
-          <div class="tool-card" data-tool="image-converter">
-            <div class="tool-icon">🖼️</div>
-            <h3>Image Converter</h3>
-            <p>Convert between image formats</p>
-          </div>
-          <div class="tool-card" data-tool="webp-to-png">
-            <div class="tool-icon">🌐➡️📷</div>
-            <h3>WEBP to PNG</h3>
-            <p>Convert WEBP to PNG</p>
-          </div>
-          <div class="tool-card" data-tool="jfif-to-png">
-            <div class="tool-icon">📸➡️📷</div>
-            <h3>JFIF to PNG</h3>
-            <p>Convert JFIF to PNG</p>
-          </div>
-          <div class="tool-card" data-tool="png-to-svg">
-            <div class="tool-icon">📷➡️🔷</div>
-            <h3>PNG to SVG</h3>
-            <p>Convert PNG to SVG</p>
-          </div>
-          <div class="tool-card" data-tool="heic-to-jpg">
-            <div class="tool-icon">📱➡️📷</div>
-            <h3>HEIC to JPG</h3>
-            <p>Convert HEIC to JPG</p>
-          </div>
-          <div class="tool-card" data-tool="heic-to-png">
-            <div class="tool-icon">📱➡️📷</div>
-            <h3>HEIC to PNG</h3>
-            <p>Convert HEIC to PNG</p>
-          </div>
-          <div class="tool-card" data-tool="webp-to-jpg">
-            <div class="tool-icon">🌐➡️📷</div>
-            <h3>WEBP to JPG</h3>
-            <p>Convert WEBP to JPG</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- PDF & Documents Category -->
-      <div id="pdf-category" class="category-content">
-        <div class="tools-grid">
-          <div class="tool-card" data-tool="pdf-converter">
-            <div class="tool-icon">📄</div>
-            <h3>PDF Converter</h3>
-            <p>Convert PDF files</p>
-          </div>
-          <div class="tool-card" data-tool="document-converter">
-            <div class="tool-icon">📝</div>
-            <h3>Document Converter</h3>
-            <p>Convert documents</p>
-          </div>
-          <div class="tool-card" data-tool="ebook-converter">
-            <div class="tool-icon">📚</div>
-            <h3>Ebook Converter</h3>
-            <p>Convert ebooks</p>
-          </div>
-          <div class="tool-card" data-tool="pdf-to-word">
-            <div class="tool-icon">📄➡️📝</div>
-            <h3>PDF to Word</h3>
-            <p>Convert PDF to Word</p>
-          </div>
-          <div class="tool-card" data-tool="pdf-to-jpg">
-            <div class="tool-icon">📄➡️📷</div>
-            <h3>PDF to JPG</h3>
-            <p>Convert PDF to JPG</p>
-          </div>
-          <div class="tool-card" data-tool="pdf-to-epub">
-            <div class="tool-icon">📄➡️📚</div>
-            <h3>PDF to EPUB</h3>
-            <p>Convert PDF to EPUB</p>
-          </div>
-          <div class="tool-card" data-tool="epub-to-pdf">
-            <div class="tool-icon">📚➡️📄</div>
-            <h3>EPUB to PDF</h3>
-            <p>Convert EPUB to PDF</p>
-          </div>
-          <div class="tool-card" data-tool="heic-to-pdf">
-            <div class="tool-icon">📱➡️📄</div>
-            <h3>HEIC to PDF</h3>
-            <p>Convert HEIC to PDF</p>
-          </div>
-          <div class="tool-card" data-tool="docx-to-pdf">
-            <div class="tool-icon">📝➡️📄</div>
-            <h3>DOCX to PDF</h3>
-            <p>Convert DOCX to PDF</p>
-          </div>
-          <div class="tool-card" data-tool="jpg-to-pdf">
-            <div class="tool-icon">📷➡️📄</div>
-            <h3>JPG to PDF</h3>
-            <p>Convert JPG to PDF</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- GIF Category -->
-      <div id="gif-category" class="category-content">
-        <div class="tools-grid">
-          <div class="tool-card" data-tool="video-to-gif">
-            <div class="tool-icon">🎬➡️🎞️</div>
-            <h3>Video to GIF</h3>
-            <p>Convert video to GIF</p>
-          </div>
-          <div class="tool-card" data-tool="mp4-to-gif">
-            <div class="tool-icon">📹➡️🎞️</div>
-            <h3>MP4 to GIF</h3>
-            <p>Convert MP4 to GIF</p>
-          </div>
-          <div class="tool-card" data-tool="webm-to-gif">
-            <div class="tool-icon">🌐➡️🎞️</div>
-            <h3>WEBM to GIF</h3>
-            <p>Convert WEBM to GIF</p>
-          </div>
-          <div class="tool-card" data-tool="apng-to-gif">
-            <div class="tool-icon">🖼️➡️🎞️</div>
-            <h3>APNG to GIF</h3>
-            <p>Convert APNG to GIF</p>
-          </div>
-          <div class="tool-card" data-tool="gif-to-mp4">
-            <div class="tool-icon">🎞️➡️📹</div>
-            <h3>GIF to MP4</h3>
-            <p>Convert GIF to MP4</p>
-          </div>
-          <div class="tool-card" data-tool="gif-to-apng">
-            <div class="tool-icon">🎞️➡️🖼️</div>
-            <h3>GIF to APNG</h3>
-            <p>Convert GIF to APNG</p>
-          </div>
-          <div class="tool-card" data-tool="image-to-gif">
-            <div class="tool-icon">🖼️➡️🎞️</div>
-            <h3>Image to GIF</h3>
-            <p>Convert image to GIF</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Others Category -->
-      <div id="others-category" class="category-content">
-        <div class="tools-grid">
-          <div class="tool-card" data-tool="unit-converter">
-            <div class="tool-icon">📏</div>
-            <h3>Unit Converter</h3>
-            <p>Convert units</p>
-          </div>
-          <div class="tool-card" data-tool="time-converter">
-            <div class="tool-icon">⏰</div>
-            <h3>Time Converter</h3>
-            <p>Convert time formats</p>
-          </div>
-          <div class="tool-card" data-tool="archive-converter">
-            <div class="tool-icon">📦</div>
-            <h3>Archive Converter</h3>
-            <p>Convert archives</p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Converter Interface (Hidden by default) -->
-    <div id="converterInterface" class="converter-interface" style="display: none;">
-      <div class="converter-header">
-        <button id="backToTools" class="back-btn">← Back to Tools</button>
-        <h2 id="converterTitle">Converter</h2>
-      </div>
-
-      <section class="uploader" id="uploader" aria-label="File uploader">
-        <div class="inner">
-          <p id="filehint">Drag and drop your files here <span style="color:rgba(255,255,255,0.45)">/</span>
-            <label for="fileInput" style="display:inline-block;">
-              <a class="browse" href="#" onclick="document.getElementById('fileInput').click(); return false;">Browse files</a>
-            </label>
+    <section class="converter-section">
+      <div class="upload-area" id="uploader" aria-label="File uploader">
+        <div class="upload-content">
+          <p class="upload-text">
+            Drag and drop your video files here <span class="separator">/</span>
+            <a href="#" class="browse-link" onclick="document.getElementById('fileInput').click(); return false;">Browse files</a>
           </p>
-          <p id="selectedFiles" style="margin-top:12px; font-size:13px; color:rgba(255,255,255,0.45)"></p>
+          <p class="terms-text">By proceeding, you agree to our Terms of use.</p>
         </div>
+        <input id="fileInput" type="file" accept="video/*" multiple />
+      </div>
 
-        <input id="fileInput" type="file" accept="*/*" multiple />
-      </section>
-
-      <div id="filePreview" class="file-preview"></div>
-
-      <div id="settingsPanel" class="settings-panel">
-        <div class="settings-row">
-          <div class="settings-label">Quality</div>
-          <div class="settings-control">
-            <select id="qualitySelect" class="quality-select">
-              <option value="high">High Quality</option>
-              <option value="medium" selected>Medium Quality</option>
-              <option value="low">Low Quality</option>
-            </select>
-          </div>
+      <div class="file-info-section" id="fileInfoSection" style="display: none;">
+        <div class="file-details">
+          <div class="file-name" id="fileName">Video name</div>
+          <div class="file-size" id="fileSize">0 mb</div>
         </div>
-
-        <div class="advanced-settings">
-          <button id="advancedToggle" class="advanced-toggle">Advanced Settings</button>
-          <div id="advancedOptions" class="advanced-options">
-            <div class="advanced-row">
-              <div class="advanced-label">Resolution</div>
-              <input id="videoResolution" class="advanced-input" type="text" placeholder="1920x1080" value="1920x1080">
-            </div>
-            <div class="advanced-row">
-              <div class="advanced-label">Frame Rate</div>
-              <input id="frameRate" class="advanced-input" type="text" placeholder="30" value="30">
-            </div>
-            <div class="advanced-row">
-              <div class="advanced-label">Bitrate (Mbps)</div>
-              <input id="videoBitrate" class="advanced-input" type="text" placeholder="2" value="2">
-            </div>
+        <div class="output-selector">
+          <button class="output-btn" id="outputBtn" aria-expanded="false" aria-controls="outputDropdown">
+            Output - MP4 ▾
+          </button>
+          <div class="output-dropdown" id="outputDropdown" style="display: none;">
+            <div class="output-option" data-format="mp4">MP4</div>
+            <div class="output-option" data-format="webm">WEBM</div>
+            <div class="output-option" data-format="mov">MOV</div>
+            <div class="output-option" data-format="avi">AVI</div>
+            <div class="output-option" data-format="mkv">MKV</div>
           </div>
         </div>
       </div>
 
-      <div class="convert-wrap" aria-hidden="false">
-        <button id="convertBtn" class="convert-btn" aria-expanded="false" aria-controls="formatList">
-          Convert file ▾
+      <div class="convert-section">
+        <button id="convertBtn" class="convert-btn" disabled>
+          Convert file
         </button>
-
-        <div id="formatList" class="format-list" style="display: none;">
-          <!-- Format options will be populated dynamically -->
-        </div>
-
-        <div id="chosen" class="selected-format" aria-live="polite"></div>
       </div>
 
-      <div id="queuePanel" class="queue-panel">
-        <div class="queue-header">
-          <div class="queue-title">Conversion Queue</div>
-          <div class="queue-controls">
-            <button id="pauseQueueBtn" class="queue-btn">Pause</button>
-            <button id="clearQueueBtn" class="queue-btn">Clear</button>
-            <button id="startQueueBtn" class="queue-btn primary">Start All</button>
-          </div>
-        </div>
-        <div id="queueList"></div>
-      </div>
-
-      <div id="historyPanel" class="history-panel">
-        <div class="history-header">
-          <div class="history-title">Recent Conversions</div>
-          <button id="clearHistoryBtn" class="history-clear">Clear History</button>
-        </div>
-        <div id="historyList"></div>
-      </div>
-
-      <div id="progressContainer" class="progress-container">
+      <div id="progressContainer" class="progress-container" style="display: none;">
         <div class="progress-bar">
           <div id="progressFill" class="progress-fill"></div>
         </div>
@@ -333,14 +80,14 @@
       </div>
 
       <div id="statusMessage" class="status-message"></div>
-    </div>
+    </section>
   </main>
 
   <footer>
-          <div style="max-width:1100px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;gap:16px;">
-        <div>Free conversion — no sign-up required · Files processed locally · Queue system & history</div>
-        <div>© 2024 Olumuyiwa Ezekiel - Vidter</div>
-      </div>
+    <div class="footer-container">
+      <div class="footer-text">Free conversion — no sign-up required · Files processed locally</div>
+      <div class="footer-copyright">© 2024 Olumuyiwa Ezekiel - Vidter</div>
+    </div>
   </footer>
 
   <!-- External JavaScript -->
