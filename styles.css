@@ -73,6 +73,12 @@ nav {
 }
 
 .arrow-down {
+  display: flex;
+  width: 25px;
+  height: 25px;
+  justify-content: center;
+  align-items: center;
+  aspect-ratio: 1/1;
   margin-left: 4px;
   transition: transform 0.3s ease;
 }
