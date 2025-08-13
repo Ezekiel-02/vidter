@@ -257,11 +257,15 @@ main {
   border-radius: 9px;
   border: 1px solid #373737;
   background: #181818;
-  color: #ffffff;
+  color: #FFF;
+  font-family: Inter;
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: normal;
+  letter-spacing: -0.48px;
   cursor: pointer;
   transition: all 0.3s ease;
-  font-size: 0.9rem;
-  font-weight: 500;
   min-width: 140px;
 }
 
