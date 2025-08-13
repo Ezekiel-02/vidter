@@ -29,29 +29,37 @@
   </header>
 
   <main>
-    <section class="hero" aria-labelledby="hero-title">
-      <h1 id="hero-title" class="title">Convert your videos</h1>
-      <p class="subtitle">Easily convert your video files to any format you need, whether it's MP4, AVI, or MOV. Enjoy seamless compatibility across all devices and platforms!</p>
-    </section>
+    <!-- Hero Section -->
+    <div class="hero">
+        <h1 class="title">Convert your videos</h1>
+        <p class="subtitle" id="subtitle">Easily convert your video files to any format you need, whether it's MP4, AVI, or MOV. Enjoy seamless compatibility across all devices and platforms!</p>
+    </div>
 
-    <section class="converter-section">
-             <div class="upload-area" id="uploader" aria-label="File uploader">
-         <div class="upload-content">
-           <div class="upload-icon">
-             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-               <polyline points="7,10 12,15 17,10"/>
-               <line x1="12" y1="15" x2="12" y2="3"/>
-             </svg>
-           </div>
-           <p class="upload-text">
-             Drag and drop your video files here <span class="separator">/</span>
-             <a href="#" class="browse-link" onclick="document.getElementById('fileInput').click(); return false;">Browse files</a>
-           </p>
-           <p class="terms-text">By proceeding, you agree to our Terms of use.</p>
-         </div>
-         <input id="fileInput" type="file" accept="video/*" multiple />
-       </div>
+    <!-- Converter Section -->
+    <div class="converter-section">
+        <!-- Upload Area -->
+        <div class="upload-area" id="uploadArea">
+            <div class="upload-content" id="uploadContent">
+                <div class="upload-text">
+                    Drag and drop your video files here
+                    <span class="separator">/</span>
+                    <a href="#" class="browse-link" onclick="document.getElementById('fileInput').click()">Browse files</a>
+                </div>
+                <div class="terms-text">By proceeding, you agree to our Terms of use.</div>
+            </div>
+            
+            <!-- Upload Progress (hidden by default) -->
+            <div class="upload-progress" id="uploadProgress" style="display: none;">
+                <div class="progress-overlay">
+                    <div class="progress-bar-upload">
+                        <div class="progress-fill-upload" id="uploadProgressFill"></div>
+                    </div>
+                    <div class="progress-text-upload" id="uploadProgressText">Uploading video / 0%</div>
+                </div>
+            </div>
+            
+            <input type="file" id="fileInput" accept="video/*" multiple>
+        </div>
 
       <div class="file-info-section" id="fileInfoSection" style="display: none;">
         <div class="file-details">
@@ -73,8 +81,11 @@
       </div>
 
       <div class="convert-section">
-        <button id="convertBtn" class="convert-btn" disabled>
+        <button class="convert-btn" id="convertBtn" disabled>
           Convert file
+          <svg class="arrow-down" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M6 9L12 15L18 9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
         </button>
       </div>
 

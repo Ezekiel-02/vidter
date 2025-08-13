@@ -6,24 +6,15 @@ let isConverting = false;
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
-  // Check if all required elements exist
-  const requiredElements = [
-    'uploader', 'fileInput', 'fileInfoSection', 'fileName', 'fileSize',
-    'outputBtn', 'outputDropdown', 'convertBtn', 'progressContainer'
-  ];
-
-  const missingElements = requiredElements.filter(id => !document.getElementById(id));
-  if (missingElements.length > 0) {
-    console.error('Missing required elements:', missingElements);
-    showStatus('Error: Some required elements are missing. Please refresh the page.', 'error');
-    return;
-  }
-
-  // Initialize components
-  initFFmpeg();
-  initFileUpload();
-  initOutputSelector();
-  initConvertButton();
+    initFileUpload();
+    initOutputSelector();
+    initConvertButton();
+    
+    // Show file info section by default with placeholder
+    const fileInfoSection = document.getElementById('fileInfoSection');
+    if (fileInfoSection) {
+        fileInfoSection.style.display = 'flex';
+    }
 });
 
 // Initialize FFmpeg
@@ -50,68 +41,105 @@ async function initFFmpeg() {
 
 // File upload functionality
 function initFileUpload() {
-  const uploader = document.getElementById('uploader');
-  const fileInput = document.getElementById('fileInput');
+    const uploadArea = document.getElementById('uploadArea');
+    const fileInput = document.getElementById('fileInput');
+    const uploadContent = document.getElementById('uploadContent');
+    const uploadProgress = document.getElementById('uploadProgress');
+    const uploadProgressFill = document.getElementById('uploadProgressFill');
+    const uploadProgressText = document.getElementById('uploadProgressText');
+    const subtitle = document.getElementById('subtitle');
+    const fileName = document.getElementById('fileName');
+    const fileSize = document.getElementById('fileSize');
+    const fileInfoSection = document.getElementById('fileInfoSection');
 
-  // File input change
-  fileInput.addEventListener('change', handleFileSelect);
+    if (!uploadArea || !fileInput) return;
 
-  // Drag and drop functionality
-  uploader.addEventListener('dragover', function(e) {
-    e.preventDefault();
-    this.classList.add('dragover');
-  });
+    // Drag and drop functionality
+    uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+    });
 
-  uploader.addEventListener('dragleave', function(e) {
-    e.preventDefault();
-    this.classList.remove('dragover');
-  });
+    uploadArea.addEventListener('dragleave', () => {
+        uploadArea.classList.remove('dragover');
+    });
 
-  uploader.addEventListener('drop', function(e) {
-    e.preventDefault();
-    this.classList.remove('dragover');
-    
-    const droppedFiles = Array.from(e.dataTransfer.files);
-    if (droppedFiles.length > 0) {
-      handleFileSelect({ target: { files: droppedFiles } });
+    uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            handleFileSelect(files[0]);
+        }
+    });
+
+    // File input change
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+            handleFileSelect(e.target.files[0]);
+        }
+    });
+
+    function handleFileSelect(file) {
+        if (!file.type.startsWith('video/')) {
+            showStatus('Please select a valid video file.', 'error');
+            return;
+        }
+
+        // Show uploading state
+        uploadArea.classList.add('uploading');
+        uploadContent.style.display = 'none';
+        uploadProgress.style.display = 'flex';
+        
+        // Update subtitle
+        subtitle.textContent = 'Your video is currently uploading. Please hold on until it\'s complete.';
+        
+        // Show file info section
+        fileInfoSection.style.display = 'flex';
+        
+        // Update file info
+        fileName.textContent = file.name;
+        fileSize.textContent = formatFileSize(file.size);
+        
+        // Simulate upload progress
+        simulateUploadProgress(file);
     }
-  });
-}
 
-function handleFileSelect(event) {
-  const files = Array.from(event.target.files);
-  if (files.length === 0) return;
+    function simulateUploadProgress(file) {
+        let progress = 0;
+        const interval = setInterval(() => {
+            progress += Math.random() * 15;
+            if (progress >= 100) {
+                progress = 100;
+                clearInterval(interval);
+                
+                // Upload complete
+                setTimeout(() => {
+                    uploadArea.classList.remove('uploading');
+                    uploadContent.style.display = 'block';
+                    uploadProgress.style.display = 'none';
+                    subtitle.textContent = 'Easily convert your video files to any format you need, whether it\'s MP4, AVI, or MOV. Enjoy seamless compatibility across all devices and platforms!';
+                    
+                    // Enable convert button
+                    const convertBtn = document.getElementById('convertBtn');
+                    if (convertBtn) {
+                        convertBtn.disabled = false;
+                    }
+                }, 500);
+            }
+            
+            uploadProgressFill.style.width = progress + '%';
+            uploadProgressText.textContent = `Uploading video / ${Math.round(progress)}%`;
+        }, 200);
+    }
 
-  // For now, we'll handle only the first file
-  const file = files[0];
-  
-  // Validate file type
-  if (!file.type.startsWith('video/')) {
-    showStatus('Please select a valid video file', 'error');
-    return;
-  }
-
-  selectedFile = file;
-  updateFileInfo(file);
-  updateConvertButton();
-}
-
-function updateFileInfo(file) {
-  const fileName = document.getElementById('fileName');
-  const fileSize = document.getElementById('fileSize');
-  const fileInfoSection = document.getElementById('fileInfoSection');
-
-  fileName.textContent = file.name;
-  fileSize.textContent = formatFileSize(file.size);
-  fileInfoSection.style.display = 'flex';
-}
-
-function formatFileSize(bytes) {
-  if (bytes === 0) return '0 Bytes';
-  const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
 }
 
 // Output format selector
