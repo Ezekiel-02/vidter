@@ -238,9 +238,13 @@ main {
 }
 
 .file-name {
-  font-weight: 600;
-  color: #ffffff;
-  font-size: 1rem;
+  color: #FFF;
+  font-family: Inter;
+  font-size: 20px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: normal;
+  letter-spacing: -0.6px;
 }
 
 .file-size {
