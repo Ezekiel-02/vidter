@@ -33,8 +33,10 @@ header {
 
 .header-container {
   display: flex;
+  height: 65px;
   justify-content: space-between;
   align-items: center;
+  align-self: stretch;
   width: 100%;
 }
 
@@ -44,8 +46,9 @@ header {
 }
 
 .logo-image {
-  height: 40px;
-  width: auto;
+  width: 95.872px;
+  height: 21.955px;
+  flex-shrink: 0;
   filter: brightness(0) invert(1);
 }
 
