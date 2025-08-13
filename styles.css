@@ -248,11 +248,16 @@ main {
 }
 
 .output-btn {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  height: 65px;
+  padding: 0 31px;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  border-radius: 9px;
+  border: 1px solid #373737;
+  background: #181818;
   color: #ffffff;
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s ease;
   font-size: 0.9rem;
@@ -484,6 +489,8 @@ footer {
   
   .output-btn {
     width: 100%;
+    height: 60px;
+    padding: 0 24px;
   }
   
   .output-dropdown {
@@ -509,6 +516,11 @@ footer {
     width: 90%;
     padding: 8px 12px;
     gap: 80px;
+  }
+  
+  .output-btn {
+    height: 55px;
+    padding: 0 20px;
   }
   
   .logo-image {
