@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://cdn.jsdelivr.net https://fastly.jsdelivr.net; worker-src 'self' blob:; child-src 'self' blob:;">
+    <title>Vidter — Convert your videos</title>
+
+    <!-- Inter font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- FFmpeg.wasm -->
+    <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.12.7/dist/ffmpeg.min.js"></script>
+    <script src="https://unpkg.com/@ffmpeg/core@0.12.4/dist/ffmpeg-core.js"></script>
+
+    <!-- External CSS -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <div class="header-container">
+            <div class="logo">
+                <img src="Assets/Vidter logo.svg" alt="Vidter" class="logo-image">
+            </div>
+            <nav aria-label="Main navigation">
+                <a href="#" class="nav-link">Convert <svg class="arrow-down" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></a>
+                <a href="#" class="nav-link">Compress <svg class="arrow-down" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></a>
+                <a href="#" class="nav-link">Pricing</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <!-- Loading overlay -->
+        <div id="loadingOverlay" class="loading-overlay">
+            <div class="loading-spinner"></div>
+            <p>Loading Vidter...</p>
+        </div>
+        
+        <!-- Hero Section -->
+        <div class="hero">
+            <h1 class="title">Convert your videos</h1>
+            <p class="subtitle" id="subtitle">Easily convert your video files to any format you need, whether it's MP4, AVI, or MOV. Enjoy seamless compatibility across all devices and platforms!</p>
+        </div>
+
+        <!-- Converter Section -->
+        <div class="converter-section">
+            <!-- Upload Area -->
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-content" id="uploadContent">
+                    <div class="upload-text">
+                        Drag and drop your video files here
+                        <span class="separator">/</span>
+                        <a href="#" class="browse-link" onclick="document.getElementById('fileInput').click()">Browse files</a>
+                    </div>
+                    <div class="terms-text">By proceeding, you agree to our Terms of use.</div>
+                </div>
+                
+                <!-- Upload Progress (hidden by default) -->
+                <div class="upload-progress" id="uploadProgress" style="display: none;">
+                    <div class="progress-overlay">
+                        <div class="progress-bar-upload">
+                            <div class="progress-fill-upload" id="uploadProgressFill"></div>
+                        </div>
+                        <div class="progress-text-upload" id="uploadProgressText">Uploading video / 0%</div>
+                    </div>
+                </div>
+                
+                <!-- Video Thumbnail Overlay (hidden by default) -->
+                <div class="video-thumbnail-overlay" id="videoThumbnailOverlay" style="display: none;">
+                    <div class="play-button">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="5,3 19,12 5,21"></polygon>
+                        </svg>
+                    </div>
+                </div>
+                
+                <!-- Clear file button positioned on the upload area -->
+                <button class="clear-file-btn" id="clearFileBtn" title="Clear file">×</button>
+                
+                <input type="file" id="fileInput" accept="video/*" multiple>
+            </div>
+
+            <div class="file-info-section" id="fileInfoSection" style="display: none;">
+                <div class="file-details">
+                    <div class="file-name" id="fileName">Video name</div>
+                    <div class="file-size" id="fileSize">0 mb</div>
+                </div>
+                <div class="button-group">
+                    <div class="output-selector">
+                        <button class="output-btn" id="outputBtn" aria-expanded="false" aria-controls="outputDropdown">
+                            Output - MP4 <svg class="arrow-down" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+                        </button>
+                        <!-- Output dropdown positioned inside the selector -->
+                        <div class="output-dropdown-container">
+                            <div class="output-dropdown" id="outputDropdown" style="display: none;">
+                                <div class="output-option" data-format="mp4">MP4</div>
+                                <div class="output-option" data-format="webm">WEBM</div>
+                                <div class="output-option" data-format="mov">MOV</div>
+                                <div class="output-option" data-format="avi">AVI</div>
+                                <div class="output-option" data-format="mkv">MKV</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="quality-selector">
+                        <button class="quality-btn" id="qualityBtn" aria-expanded="false" aria-controls="qualityDropdown">
+                            Quality <svg class="arrow-down" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+                        </button>
+                        <!-- Quality dropdown positioned inside the selector -->
+                        <div class="quality-dropdown-container">
+                            <div class="quality-dropdown" id="qualityDropdown" style="display: none;">
+                                <div class="quality-option" data-quality="fast">Fast (High Quality)</div>
+                                <div class="quality-option" data-quality="balanced">Balanced (Very High Quality)</div>
+                                <div class="quality-option" data-quality="high">High (Excellent Quality)</div>
+                                <div class="quality-option" data-quality="ultra">Ultra (Maximum Quality)</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="convert-section">
+                <button class="convert-btn" id="convertBtn" disabled>
+                    Convert file
+                </button>
+            </div>
+
+            <div id="progressContainer" class="progress-container" style="display: none;">
+                <div class="progress-bar">
+                    <div id="progressFill" class="progress-fill"></div>
+                </div>
+                <div id="progressText" class="progress-text">Initializing...</div>
+            </div>
+
+            <div id="statusMessage" class="status-message"></div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="footer-container">
+            <div class="footer-text">Free conversion — no sign-up required</div>
+            <div class="footer-copyright">© 2024 Olumuyiwa Ezekiel - Vidter</div>
+        </div>
+    </footer>
+
+    <!-- External JavaScript -->
+    <script src="app.js"></script>
+</body>
+</html>
