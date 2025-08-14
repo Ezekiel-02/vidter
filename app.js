@@ -97,10 +97,8 @@ class VidterApp {
                 }
             });
             
-            uploadArea.addEventListener('click', () => {
-                const fileInput = document.getElementById('fileInput');
-                if (fileInput) fileInput.click();
-            });
+            // Remove click event from upload area to prevent double opening
+            // The browse link in HTML already handles file selection
         }
         
         const clearFileBtn = document.getElementById('clearFileBtn');
@@ -326,12 +324,24 @@ class VidterApp {
             this.updateProgress(10, 'Preparing video...');
             this.ffmpeg.FS('writeFile', inputFileName, await this.fileToUint8Array(file));
             
-            const command = this.buildFFmpegCommand(inputFileName, outputFileName, targetFormat, settings);
+            // Try primary command first
+            let command = this.buildFFmpegCommand(inputFileName, outputFileName, targetFormat, settings);
             
             console.log('FFmpeg command:', command);
             
             this.updateProgress(20, 'Converting video...');
-            await this.ffmpeg.run(...command);
+            
+            try {
+                await this.ffmpeg.run(...command);
+            } catch (primaryError) {
+                console.log('Primary conversion failed, trying fallback...', primaryError);
+                
+                // Fallback to simpler command for better compatibility
+                const fallbackCommand = this.buildFallbackCommand(inputFileName, outputFileName, targetFormat);
+                console.log('Fallback FFmpeg command:', fallbackCommand);
+                
+                await this.ffmpeg.run(...fallbackCommand);
+            }
             
             this.updateProgress(90, 'Finalizing...');
             const outputData = this.ffmpeg.FS('readFile', outputFileName);
@@ -363,16 +373,15 @@ class VidterApp {
     buildFFmpegCommand(inputFile, outputFile, format, settings) {
         const baseCommand = ['-i', inputFile];
         
+        // Simplified command for better compatibility
         const videoSettings = [
             '-c:v', this.getVideoCodec(format),
-            '-b:v', settings.videoBitrate,
             '-preset', settings.preset,
             '-crf', settings.crf.toString()
         ];
         
         const audioSettings = [
-            '-c:a', this.getAudioCodec(format),
-            '-b:a', settings.audioBitrate
+            '-c:a', this.getAudioCodec(format)
         ];
         
         const formatSettings = this.getFormatSettings(format);
@@ -383,7 +392,7 @@ class VidterApp {
     getVideoCodec(format) {
         const codecs = {
             mp4: 'libx264',
-            webm: 'libvpx-vp9',
+            webm: 'libvpx',  // Changed from libvpx-vp9 for better compatibility
             mov: 'libx264',
             avi: 'libx264',
             mkv: 'libx264'
@@ -396,7 +405,7 @@ class VidterApp {
             mp4: 'aac',
             webm: 'libvorbis',
             mov: 'aac',
-            avi: 'mp3',
+            avi: 'libmp3lame',  // Changed from mp3 for better compatibility
             mkv: 'aac'
         };
         return codecs[format] || 'aac';
@@ -404,13 +413,33 @@ class VidterApp {
     
     getFormatSettings(format) {
         const settings = {
-            mp4: ['-movflags', '+faststart'],
+            mp4: ['-movflags', '+faststart', '-pix_fmt', 'yuv420p'],  // Added yuv420p for better compatibility
             webm: [],
-            mov: ['-movflags', '+faststart'],
-            avi: [],
+            mov: ['-movflags', '+faststart', '-pix_fmt', 'yuv420p'],  // Added yuv420p for better compatibility
+            avi: ['-pix_fmt', 'yuv420p'],  // Added yuv420p for better compatibility
             mkv: []
         };
         return settings[format] || [];
+    }
+    
+    buildFallbackCommand(inputFile, outputFile, format) {
+        // Simple fallback command for maximum compatibility
+        const baseCommand = ['-i', inputFile];
+        
+        let codecSettings = [];
+        if (format === 'mp4') {
+            codecSettings = ['-c:v', 'libx264', '-c:a', 'aac', '-pix_fmt', 'yuv420p'];
+        } else if (format === 'webm') {
+            codecSettings = ['-c:v', 'libvpx', '-c:a', 'libvorbis'];
+        } else if (format === 'mov') {
+            codecSettings = ['-c:v', 'libx264', '-c:a', 'aac', '-pix_fmt', 'yuv420p'];
+        } else if (format === 'avi') {
+            codecSettings = ['-c:v', 'libx264', '-c:a', 'libmp3lame', '-pix_fmt', 'yuv420p'];
+        } else {
+            codecSettings = ['-c:v', 'libx264', '-c:a', 'aac', '-pix_fmt', 'yuv420p'];
+        }
+        
+        return [...baseCommand, ...codecSettings, outputFile];
     }
     
     getMimeType(format) {
