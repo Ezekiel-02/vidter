@@ -9,8 +9,31 @@
     <!-- Inter font -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     
-    <!-- FFmpeg.wasm - Loaded asynchronously for better performance -->
-    <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.12.7/dist/ffmpeg.min.js" async></script>
+    <!-- FFmpeg.wasm - Load with fallback -->
+    <script>
+        // Load FFmpeg with retry mechanism
+        function loadFFmpegScript() {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = 'https://unpkg.com/@ffmpeg/ffmpeg@0.12.7/dist/ffmpeg.min.js';
+                script.onload = () => resolve();
+                script.onerror = () => {
+                    console.log('Primary CDN failed, trying fallback...');
+                    const fallbackScript = document.createElement('script');
+                    fallbackScript.src = 'https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.7/dist/ffmpeg.min.js';
+                    fallbackScript.onload = () => resolve();
+                    fallbackScript.onerror = () => reject(new Error('Failed to load FFmpeg from all sources'));
+                    document.head.appendChild(fallbackScript);
+                };
+                document.head.appendChild(script);
+            });
+        }
+        
+        // Load FFmpeg immediately
+        loadFFmpegScript().catch(error => {
+            console.error('FFmpeg loading failed:', error);
+        });
+    </script>
 
     <!-- External CSS -->
     <link rel="stylesheet" href="styles.css">

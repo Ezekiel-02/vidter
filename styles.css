@@ -785,6 +785,24 @@ main {
   color: #ff9500;
 }
 
+.retry-btn {
+  background-color: #ff3b30;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  margin-left: 12px;
+  transition: background-color 0.2s;
+  font-family: 'Inter', sans-serif;
+}
+
+.retry-btn:hover {
+  background-color: #d70015;
+}
+
 /* Footer */
 footer {
   background: rgba(255, 255, 255, 0.05);

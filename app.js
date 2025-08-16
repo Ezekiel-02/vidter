@@ -32,7 +32,20 @@ class VidterApp {
             }).catch((error) => {
                 console.error('FFmpeg loading failed:', error);
                 this.hideLoadingOverlay();
-                this.showStatus('Video converter loaded with limited features. Some conversions may not work.', 'warning');
+                this.showStatus('⚠️ Video converter failed to load. Please refresh the page or check your internet connection.', 'error');
+                
+                // Add retry button
+                const retryBtn = document.createElement('button');
+                retryBtn.textContent = 'Retry Loading';
+                retryBtn.className = 'retry-btn';
+                retryBtn.onclick = () => {
+                    location.reload();
+                };
+                
+                const statusMessage = document.getElementById('statusMessage');
+                if (statusMessage) {
+                    statusMessage.appendChild(retryBtn);
+                }
             });
             
             // Add timeout to prevent infinite loading
@@ -54,8 +67,18 @@ class VidterApp {
         try {
             this.showStatus('Loading video converter...', 'info');
             
+            // Wait for FFmpeg to be available with timeout
+            let attempts = 0;
+            const maxAttempts = 30; // 30 seconds
+            
+            while (typeof createFFmpeg === 'undefined' && attempts < maxAttempts) {
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                attempts++;
+                this.updateProgress(Math.round((attempts / maxAttempts) * 40), `Waiting for FFmpeg... ${attempts}s`);
+            }
+            
             if (typeof createFFmpeg === 'undefined') {
-                throw new Error('FFmpeg.wasm not loaded. Please check your internet connection.');
+                throw new Error('FFmpeg.wasm failed to load. Please check your internet connection and refresh the page.');
             }
             
             this.ffmpeg = createFFmpeg({ 
@@ -65,7 +88,7 @@ class VidterApp {
             
             this.ffmpeg.setProgress(({ ratio }) => {
                 if (ratio < 1) {
-                    this.updateProgress(Math.round(ratio * 80), `Loading FFmpeg... ${Math.round(ratio * 100)}%`);
+                    this.updateProgress(40 + Math.round(ratio * 50), `Loading FFmpeg... ${Math.round(ratio * 100)}%`);
                 }
             });
             
