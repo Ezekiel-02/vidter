@@ -22,12 +22,30 @@ class VidterApp {
     
     async init() {
         try {
-            await this.loadFFmpeg();
             this.setupEventListeners();
-            this.hideLoadingOverlay();
-            this.showStatus('Vidter is ready! Upload a video to get started.', 'success');
+            this.updateProgress(10, 'Initializing...');
+            
+            // Load FFmpeg in background for better UX
+            const ffmpegPromise = this.loadFFmpeg().then(() => {
+                this.hideLoadingOverlay();
+                this.showStatus('Vidter is ready! Upload a video to get started.', 'success');
+            }).catch((error) => {
+                console.error('FFmpeg loading failed:', error);
+                this.hideLoadingOverlay();
+                this.showStatus('Video converter loaded with limited features. Some conversions may not work.', 'warning');
+            });
+            
+            // Add timeout to prevent infinite loading
+            setTimeout(() => {
+                if (!this.isFFmpegLoaded) {
+                    this.hideLoadingOverlay();
+                    this.showStatus('Loading taking longer than expected. You can still use the interface.', 'info');
+                }
+            }, 15000); // 15 second timeout
+            
         } catch (error) {
             console.error('Initialization failed:', error);
+            this.hideLoadingOverlay();
             this.showStatus('Failed to initialize Vidter. Please refresh the page.', 'error');
         }
     }
@@ -41,19 +59,20 @@ class VidterApp {
             }
             
             this.ffmpeg = createFFmpeg({ 
-                log: true,
+                log: false, // Disable logging for faster loading
                 corePath: 'https://unpkg.com/@ffmpeg/core@0.12.4/dist/ffmpeg-core.js'
             });
             
             this.ffmpeg.setProgress(({ ratio }) => {
                 if (ratio < 1) {
-                    this.showStatus(`Loading FFmpeg... ${Math.round(ratio * 100)}%`, 'info');
+                    this.updateProgress(Math.round(ratio * 80), `Loading FFmpeg... ${Math.round(ratio * 100)}%`);
                 }
             });
             
             await this.ffmpeg.load();
             this.isFFmpegLoaded = true;
             console.log('FFmpeg loaded successfully');
+            this.updateProgress(100, 'Ready!');
             this.showStatus('Video converter ready!', 'success');
             
         } catch (error) {
